@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       component:
-        description: 'Select component'
+        description: "Select component"
         required: true
         type: choice
         options:
@@ -12,7 +12,7 @@ on:
           - piggy-api
           - piggy-db
       component_type:
-        description: 'Select component type'
+        description: "Select component type"
         required: true
         type: choice
         options:
@@ -20,11 +20,11 @@ on:
           - .net
           - sql-dacpac
       is_minor_release:
-        description: 'Is this a minor release?'
+        description: "Is this a minor release?"
         required: false
         type: boolean
       is_major_release:
-        description: 'Is this a major release?'
+        description: "Is this a major release?"
         required: false
         type: boolean
 
@@ -114,7 +114,8 @@ jobs:
     environment: ${{ env.ENVIRONMENT }}
     steps:
       - name: Placeholder for .NET build
-        run: echo "Build logic for .NET component: ${{ github.event.inputs.component }}"
+        run: |
+          echo "Build logic for .NET component: ${{ github.event.inputs.component }}"
 
   sql-dacpac-build:
     if: ${{ github.event.inputs.component_type == 'sql-dacpac' }}
@@ -122,4 +123,5 @@ jobs:
     environment: ${{ env.ENVIRONMENT }}
     steps:
       - name: Placeholder for SQL DACPAC build
-        run: echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
+        run: |
+          echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
