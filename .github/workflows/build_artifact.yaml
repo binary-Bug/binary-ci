@@ -41,7 +41,7 @@ jobs:
           echo "REPO=${{ vars.REPO_OWNER }}${{ github.event.inputs.component }}" >> $GITHUB_OUTPUT
 
       - name: Checkout Component Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ steps.repo_info.outputs.REPO }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
@@ -81,22 +81,50 @@ jobs:
           echo "MINOR=$MINOR" >> $GITHUB_OUTPUT
           echo "PATCH=$PATCH" >> $GITHUB_OUTPUT
 
-      - name: Build Angular App
+      - name: Update version.json
         run: |
-          npm install
-          npm run build --prod
+          cd src/configs
+          cat version.json
+          rm version.json
+          echo '{"version": "${{ steps.versioning.outputs.VERSION }}"}' > version.json
+          cat version.json
 
-      - name: Archive Artifact
+      # - name: Set up Node.js version
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: "20.x"
+
+      # - name: Build Angular App
+      #   run: |
+      #     npm install
+      #     npm run build --prod
+
+      # - name: Archive Artifact
+      #   run: |
+      #     mkdir -p release
+      #     cp -r dist/* release/
+      #     zip -r ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}.zip release
+
+      # - name: Upload Artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}
+      #     path: ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}.zip
+
+      - name: Update version variables in component repo
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          REPO: ${{ steps.repo_info.outputs.REPO }}
+          MAJOR: ${{ steps.versioning.outputs.MAJOR }}
+          MINOR: ${{ steps.versioning.outputs.MINOR }}
+          PATCH: ${{ steps.versioning.outputs.PATCH }}
         run: |
-          mkdir -p release
-          cp -r dist/* release/
-          zip -r ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}.zip release
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}
-          path: ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}.zip
+          for V in MAJOR MINOR PATCH; do
+            gh variable set "$V" \
+              --body "${!V}" \
+              --repo "$REPO"
+            echo "Updated $V=${!V}"
+          done
 
   dotnet-build:
     if: ${{ github.event.inputs.component_type == '.net' }}
