@@ -32,7 +32,7 @@ jobs:
   angular-build:
     if: ${{ github.event.inputs.component_type == 'angular' }}
     runs-on: ubuntu-latest
-    environment: "ci-environment"
+    environment: "ci-angular"
 
     steps:
       - name: Compose Repository Name
@@ -108,7 +108,7 @@ jobs:
   dotnet-build:
     if: ${{ github.event.inputs.component_type == '.net' }}
     runs-on: windows-latest
-    environment: ${{ env.ENVIRONMENT }}
+    environment: "ci-dotnet"
     steps:
       - name: Placeholder for .NET build
         run: |
@@ -117,7 +117,7 @@ jobs:
   sql-dacpac-build:
     if: ${{ github.event.inputs.component_type == 'sql-dacpac' }}
     runs-on: windows-latest
-    environment: ${{ env.ENVIRONMENT }}
+    environment: "ci-sql-dacpac"
     steps:
       - name: Placeholder for SQL DACPAC build
         run: |
