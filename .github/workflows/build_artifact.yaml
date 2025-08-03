@@ -45,7 +45,7 @@ jobs:
         with:
           repository: ${{ steps.repo_info.outputs.REPO }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          ref: test-ci
+          ref: master
 
       - name: Fetch current version variables
         id: fetch_vars
@@ -100,7 +100,7 @@ jobs:
           zip -r ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}.zip release
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}
           path: ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}.zip
