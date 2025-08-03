@@ -50,26 +50,19 @@ jobs:
       - name: Fetch current version variables
         id: fetch_vars
         run: |
-          for V in MAJOR MINOR; do
+          for V in MAJOR MINOR PATCH; do
             VAL=$(gh variable get "$V" --repo "${{ steps.repo_info.outputs.REPO }}")
             echo "$V=$VAL" >> $GITHUB_ENV
           done
         env:
           GITHUB_TOKEN: ${{secrets.PERSONAL_ACCESS_TOKEN}}
 
-      - name: Load Version Variables
-        id: load_version
-        run: |
-          echo "MAJOR=${{ vars.MAJOR }}" >> $GITHUB_ENV
-          echo "MINOR=${{ vars.MINOR }}" >> $GITHUB_ENV
-          echo "PATCH=${{ vars.PATCH }}" >> $GITHUB_ENV
-
       - name: Calculate New Version
         id: versioning
         run: |
-          MAJOR=${{ vars.MAJOR }}
-          MINOR=${{ vars.MINOR }}
-          PATCH=${{ vars.PATCH }}
+          MAJOR=${{ env.MAJOR }}
+          MINOR=${{ env.MINOR }}
+          PATCH=${{ env.PATCH }}
 
           if [[ "${{ github.event.inputs.is_major_release }}" == "true" ]]; then
             MAJOR=$((MAJOR + 1))
