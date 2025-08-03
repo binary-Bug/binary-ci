@@ -1,4 +1,5 @@
-name: "Build Artifact for ${{ github.event.inputs.component }}"
+name: Build Artifact
+run-name: "Build Artifact for ${{ github.event.inputs.component }}"
 
 on:
   workflow_dispatch:
