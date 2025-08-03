@@ -1,0 +1,125 @@
+name: Build Artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: 'Select component'
+        required: true
+        type: choice
+        options:
+          - piggy-ui
+          - piggy-api
+          - piggy-db
+      component_type:
+        description: 'Select component type'
+        required: true
+        type: choice
+        options:
+          - angular
+          - .net
+          - sql-dacpac
+      is_minor_release:
+        description: 'Is this a minor release?'
+        required: false
+        type: boolean
+      is_major_release:
+        description: 'Is this a major release?'
+        required: false
+        type: boolean
+
+env:
+  ENVIRONMENT: ci-env
+
+jobs:
+  angular-build:
+    if: ${{ github.event.inputs.component_type == 'angular' }}
+    runs-on: ubuntu-latest
+    environment: ${{ env.ENVIRONMENT }}
+
+    steps:
+      - name: Compose Repository Name
+        id: repo_info
+        run: |
+          echo "REPO=${{ vars.REPO_OWNER }}${{ github.event.inputs.component }}" >> $GITHUB_OUTPUT
+
+      - name: Checkout Component Repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ steps.repo_info.outputs.REPO }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: test-ci
+
+      - name: Fetch current version variables
+        id: fetch_vars
+        run: |
+          for V in MAJOR MINOR; do
+            VAL=$(gh variable get "$V" --repo "${{ steps.repo_info.outputs.REPO }}")
+            echo "$V=$VAL" >> $GITHUB_ENV
+          done
+        env:
+          GITHUB_TOKEN: ${{secrets.PERSONAL_ACCESS_TOKEN}}
+
+      - name: Load Version Variables
+        id: load_version
+        run: |
+          echo "MAJOR=${{ vars.MAJOR }}" >> $GITHUB_ENV
+          echo "MINOR=${{ vars.MINOR }}" >> $GITHUB_ENV
+          echo "PATCH=${{ vars.PATCH }}" >> $GITHUB_ENV
+
+      - name: Calculate New Version
+        id: versioning
+        run: |
+          MAJOR=${{ vars.MAJOR }}
+          MINOR=${{ vars.MINOR }}
+          PATCH=${{ vars.PATCH }}
+
+          if [[ "${{ github.event.inputs.is_major_release }}" == "true" ]]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [[ "${{ github.event.inputs.is_minor_release }}" == "true" ]]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "MAJOR=$MAJOR" >> $GITHUB_OUTPUT
+          echo "MINOR=$MINOR" >> $GITHUB_OUTPUT
+          echo "PATCH=$PATCH" >> $GITHUB_OUTPUT
+
+      - name: Build Angular App
+        run: |
+          npm install
+          npm run build --prod
+
+      - name: Archive Artifact
+        run: |
+          mkdir -p release
+          cp -r dist/* release/
+          zip -r ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}.zip release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}
+          path: ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}.zip
+
+  dotnet-build:
+    if: ${{ github.event.inputs.component_type == '.net' }}
+    runs-on: windows-latest
+    environment: ${{ env.ENVIRONMENT }}
+    steps:
+      - name: Placeholder for .NET build
+        run: echo "Build logic for .NET component: ${{ github.event.inputs.component }}"
+
+  sql-dacpac-build:
+    if: ${{ github.event.inputs.component_type == 'sql-dacpac' }}
+    runs-on: windows-latest
+    environment: ${{ env.ENVIRONMENT }}
+    steps:
+      - name: Placeholder for SQL DACPAC build
+        run: echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
