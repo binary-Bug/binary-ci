@@ -1,22 +1,33 @@
-# binary-ci
-binary-ci is a centralized GitHub Actions repository dedicated to building artifacts and triggering downstream deployment pipelines. It abstracts and standardizes your build logic into reusable workflows, then invokes the appropriate deployment actions for any target environment.
+# binary-devops
 
-Key Features
-Build and package UI, API, and database components into versioned artifacts
+binary-devops is my personal GitHub Actions + Terraform repository that ties together CI, CD, and Azure infrastructure provisioning in one place. I use it to build, deploy, and manage cloud resources consistently across my projects.
 
-Publish artifacts to registries or storage (npm, NuGet, Docker Registry, S3, etc.)
+---
 
-Trigger downstream deployment workflows in Azure, AWS, GCP, or custom environments
+## Why I Created This
 
-Define reusable composite actions and jobs to keep pipelines DRY
+I wanted a single source of truth for:
+- Building and packaging UI, API, and database components  
+- Publishing versioned artifacts to registries (npm, Docker, ACR, etc.)  
+- Deploying to Azure App Service, Functions, or AKS  
+- Provisioning and managing Azure resources declaratively with Terraform  
 
-Benefits
-Consistency: enforce a single, uniform build process across all repositories
+---
 
-Reusability: share build steps centrally instead of duplicating pipeline code
+## Key Features
 
-Agility: onboard new projects quickly by importing predefined build workflows
+- Build and package components into versioned artifacts  
+- Publish artifacts to npm, NuGet, Docker Registry, Azure Container Registry  
+- Deploy workloads to Azure App Service, Functions, and AKS via reusable workflows  
+- Define Terraform modules for resource groups, VNets, storage accounts, Key Vaults, AKS clusters, and more  
+- Create composite GitHub Actions and Terraform modules to keep everything DRY  
+- Parameterize workflows and modules to target multiple environments and subscriptions  
 
-Visibility: track artifact creation and deployment triggers from one source of truth
+---
 
-Integrate binary-ci to streamline your artifact lifecycle and ensure every deployment pipeline invokes a trusted, versioned build process.
+## Benefits
+
+- End-to-end automation tailored to my personal projects  
+- Consistent CI/CD and infrastructure patterns across all my repos  
+- Rapid onboarding of new prototypes by importing predefined workflows and modules  
+- Centralized visibility into build artifacts, deployments, and infra changes  
