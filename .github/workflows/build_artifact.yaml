@@ -28,14 +28,11 @@ on:
         required: false
         type: boolean
 
-env:
-  ENVIRONMENT: ci-env
-
 jobs:
   angular-build:
     if: ${{ github.event.inputs.component_type == 'angular' }}
     runs-on: ubuntu-latest
-    environment: ${{ env.ENVIRONMENT }}
+    environment: "ci-environment"
 
     steps:
       - name: Compose Repository Name
