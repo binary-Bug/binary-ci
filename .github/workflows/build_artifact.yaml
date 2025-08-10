@@ -20,12 +20,13 @@ on:
           - angular
           - .net
           - sql-dacpac
-      is_minor_release:
-        description: "Is this a minor release?"
-        required: false
-        type: boolean
-      is_major_release:
-        description: "Is this a major release?"
+      release_type:
+        description: Bump type
+        required: true
+        type: choice
+        options: [patch, minor, major]
+      is_pre_release:
+        description: "Is this a pre-release?"
         required: false
         type: boolean
 
@@ -65,11 +66,11 @@ jobs:
           MINOR=${{ env.MINOR }}
           PATCH=${{ env.PATCH }}
 
-          if [[ "${{ github.event.inputs.is_major_release }}" == "true" ]]; then
+          if [[ "${{ github.event.inputs.release_type }}" == "major" ]]; then
             MAJOR=$((MAJOR + 1))
             MINOR=0
             PATCH=0
-          elif [[ "${{ github.event.inputs.is_minor_release }}" == "true" ]]; then
+          elif [[ "${{ github.event.inputs.release_type }}" == "minor" ]]; then
             MINOR=$((MINOR + 1))
             PATCH=0
           else
@@ -99,12 +100,6 @@ jobs:
         run: |
           npm install
           npm run build
-
-      # - name: Archive Artifact
-      #   run: |
-      #     mkdir -p release
-      #     cp -r dist/${{ github.event.inputs.component }}/browser/* release/
-      #     zip -r ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}.zip release/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -157,8 +152,7 @@ jobs:
           COMPONENT=${{ github.event.inputs.component }}
           TAG=${{ steps.versioning.outputs.VERSION }}
           # determine prerelease flag
-          if [[ "${{ github.event.inputs.is_major_release }}" == "false" && \
-                "${{ github.event.inputs.is_minor_release }}" == "false" ]]; then
+          if [[ "${{ github.event.inputs.is_pre_release }}" == "true" ]]; then
             PRE="--prerelease"
           else
             PRE=""
