@@ -44,7 +44,7 @@ jobs:
     steps:
       - name: Angular Build Action
         id: angular_build_action
-        uses: ./.github/actions/angular/action.yaml
+        uses: ./.github/actions/angular
         with:
           component: ${{ github.event.inputs.component }}
           repo_owner: ${{ vars.REPO_OWNER }}
