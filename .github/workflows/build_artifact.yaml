@@ -39,144 +39,39 @@ jobs:
     if: ${{ github.event.inputs.component_type == 'angular' }}
     runs-on: ubuntu-latest
     environment: "ci-angular"
-
+    outputs:
+      version: ${{ steps.angular_build_action.outputs.VERSION }}
     steps:
-      - name: Compose Repository Name
-        id: repo_info
-        run: |
-          echo "REPO=${{ vars.REPO_OWNER }}${{ github.event.inputs.component }}" >> $GITHUB_OUTPUT
-
-      - name: Checkout Component Repo
-        uses: actions/checkout@v4
+      - name: Angular Build Action
+        id: angular_build_action
+        uses: ./.github/actions/angular/action.yaml
         with:
-          repository: ${{ steps.repo_info.outputs.REPO }}
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          ref: master
+          component: ${{ github.event.inputs.component }}
+          repo_owner: ${{ vars.REPO_OWNER }}
+          personal_access_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          release_type: ${{ github.event.inputs.release_type }}
+          is_pre_release: ${{ github.event.inputs.is_pre_release }}
+          should_update_version_json: ${{ github.event.inputs.should_update_version_json }}
 
-      - name: Fetch current version variables
-        id: fetch_vars
+  log-build-output:
+    needs:
+      - angular-build
+      - dotnet-build
+      - sql-dacpac-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log Angular Build Output
+        if: ${{ always() && needs.angular-build.result == 'success' }}
         run: |
-          for V in MAJOR MINOR PATCH; do
-            VAL=$(gh variable get "$V" --repo "${{ steps.repo_info.outputs.REPO }}")
-            echo "$V=$VAL" >> $GITHUB_ENV
-          done
-        env:
-          GITHUB_TOKEN: ${{secrets.PERSONAL_ACCESS_TOKEN}}
-
-      - name: Calculate New Version
-        id: versioning
+          echo "Angular build version: ${{ needs.angular-build.outputs.version }}"
+      - name: Log .NET Build Output
+        if: ${{ always() && needs.dotnet-build.result == 'success' }}
         run: |
-          MAJOR=${{ env.MAJOR }}
-          MINOR=${{ env.MINOR }}
-          PATCH=${{ env.PATCH }}
-
-          if [[ "${{ github.event.inputs.release_type }}" == "major" ]]; then
-            MAJOR=$((MAJOR + 1))
-            MINOR=0
-            PATCH=0
-          elif [[ "${{ github.event.inputs.release_type }}" == "minor" ]]; then
-            MINOR=$((MINOR + 1))
-            PATCH=0
-          else
-            PATCH=$((PATCH + 1))
-          fi
-
-          VERSION="v${MAJOR}.${MINOR}.${PATCH}"
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "MAJOR=$MAJOR" >> $GITHUB_OUTPUT
-          echo "MINOR=$MINOR" >> $GITHUB_OUTPUT
-          echo "PATCH=$PATCH" >> $GITHUB_OUTPUT
-
-      - name: Update version.json
-        if: ${{ github.event.inputs.should_update_version_json }}
+          echo "Dotnet build completed for: ${{ github.event.inputs.component }}"
+      - name: Log SQL DACPAC Build Output
+        if: ${{ always() && needs.sql-dacpac-build.result == 'success' }}
         run: |
-          cd src/configs
-          cat version.json
-          rm version.json
-          echo '{"version": "${{ steps.versioning.outputs.VERSION }}"}' > version.json
-          cat version.json
-
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20.x"
-
-      - name: Build Angular App
-        run: |
-          npm install
-          npm run build
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event.inputs.component }}-${{ steps.versioning.outputs.VERSION }}
-          path: "dist/${{ github.event.inputs.component }}/browser/"
-
-      - name: Update version variables in component repo
-        env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          REPO: ${{ steps.repo_info.outputs.REPO }}
-          MAJOR: ${{ steps.versioning.outputs.MAJOR }}
-          MINOR: ${{ steps.versioning.outputs.MINOR }}
-          PATCH: ${{ steps.versioning.outputs.PATCH }}
-        run: |
-          for V in MAJOR MINOR PATCH; do
-            gh variable set "$V" \
-              --body "${!V}" \
-              --repo "$REPO"
-            echo "Updated $V=${!V}"
-          done
-
-      - name: Checkout Component Repo (Full History)
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ steps.repo_info.outputs.REPO }}
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          ref: master
-          fetch-depth: 0
-
-      - name: Create Git Tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.versioning.outputs.VERSION }}" \
-                   -m "Release ${{ steps.versioning.outputs.VERSION }}"
-          git push origin "${{ steps.versioning.outputs.VERSION }}"
-
-      - name: Generate Changelog
-        run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^)
-          echo "Previous tag: $LAST_TAG"
-          CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:'- %s')
-          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          echo "$CHANGELOG" >> $GITHUB_ENV
-          echo "EOF"      >> $GITHUB_ENV
-
-      - name: Create Release on Component via gh
-        run: |
-          COMPONENT=${{ github.event.inputs.component }}
-          TAG=${{ steps.versioning.outputs.VERSION }}
-          # determine prerelease flag
-          if [[ "${{ github.event.inputs.is_pre_release }}" == "true" ]]; then
-            PRE="--prerelease"
-          else
-            PRE=""
-          fi
-          RUN_NUM=${{ github.run_number }}
-          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          gh release create "$TAG" \
-            --repo "${{ steps.repo_info.outputs.REPO }}" \
-            --title "${{ github.ref_name }} $TAG" \
-            --notes "$(
-              printf '## Changelog\n%s\n\n**Workflow run**: [%s](%s)\n\n_Generated by Binary CI_\n' \
-                "${{ env.CHANGELOG }}" \
-                "CI Run #${RUN_NUM}" \
-                "${RUN_URL}"
-            )" \
-            --draft=false $PRE
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          echo "SQL DACPAC build completed for: ${{ github.event.inputs.component }}"
 
   dotnet-build:
     if: ${{ github.event.inputs.component_type == '.net' }}
