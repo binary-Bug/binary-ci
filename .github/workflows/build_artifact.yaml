@@ -21,12 +21,16 @@ on:
           - .net
           - sql-dacpac
       release_type:
-        description: Bump type
+        description: Release type
         required: true
         type: choice
         options: [patch, minor, major]
       is_pre_release:
         description: "Is this a pre-release?"
+        required: false
+        type: boolean
+      should_update_version_json:
+        description: "Should update version.json?"
         required: false
         type: boolean
 
@@ -84,6 +88,7 @@ jobs:
           echo "PATCH=$PATCH" >> $GITHUB_OUTPUT
 
       - name: Update version.json
+        if: ${{ github.event.inputs.should_update_version_json }}
         run: |
           cd src/configs
           cat version.json
