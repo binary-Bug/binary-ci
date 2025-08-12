@@ -42,6 +42,8 @@ jobs:
     outputs:
       version: ${{ steps.angular_build_action.outputs.VERSION }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
       - name: Angular Build Action
         id: angular_build_action
         uses: ./.github/actions/angular
@@ -78,6 +80,8 @@ jobs:
     runs-on: windows-latest
     environment: "ci-dotnet"
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
       - name: Placeholder for .NET build
         run: |
           echo "Build logic for .NET component: ${{ github.event.inputs.component }}"
@@ -87,6 +91,8 @@ jobs:
     runs-on: windows-latest
     environment: "ci-sql-dacpac"
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
       - name: Placeholder for SQL DACPAC build
         run: |
           echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
