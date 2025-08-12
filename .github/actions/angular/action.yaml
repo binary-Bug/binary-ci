@@ -154,4 +154,4 @@ runs:
         GITHUB_TOKEN: ${{ inputs.personal_access_token }}
       shell: bash
     - name: Checkout Repository
-        uses: actions/checkout@v4
+      uses: actions/checkout@v4
