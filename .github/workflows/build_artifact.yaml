@@ -33,6 +33,7 @@ on:
         description: "Should update version.json?"
         required: false
         type: boolean
+        default: true
 
 jobs:
   angular-build:
@@ -55,26 +56,6 @@ jobs:
           is_pre_release: ${{ github.event.inputs.is_pre_release }}
           should_update_version_json: ${{ github.event.inputs.should_update_version_json }}
 
-  log-build-output:
-    needs:
-      - angular-build
-      - dotnet-build
-      - sql-dacpac-build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Log Angular Build Output
-        if: ${{ always() && needs.angular-build.result == 'success' }}
-        run: |
-          echo "Angular build version: ${{ needs.angular-build.outputs.version }}"
-      - name: Log .NET Build Output
-        if: ${{ always() && needs.dotnet-build.result == 'success' }}
-        run: |
-          echo "Dotnet build completed for: ${{ github.event.inputs.component }}"
-      - name: Log SQL DACPAC Build Output
-        if: ${{ always() && needs.sql-dacpac-build.result == 'success' }}
-        run: |
-          echo "SQL DACPAC build completed for: ${{ github.event.inputs.component }}"
-
   dotnet-build:
     if: ${{ github.event.inputs.component_type == '.net' }}
     runs-on: windows-latest
@@ -96,3 +77,23 @@ jobs:
       - name: Placeholder for SQL DACPAC build
         run: |
           echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
+
+  log-build-output:
+    needs:
+      - angular-build
+      - dotnet-build
+      - sql-dacpac-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log Angular Build Output
+        if: ${{ always() && needs.angular-build.result == 'success' }}
+        run: |
+          echo "Angular build version: ${{ needs.angular-build.outputs.version }}"
+      - name: Log .NET Build Output
+        if: ${{ always() && needs.dotnet-build.result == 'success' }}
+        run: |
+          echo "Dotnet build completed for: ${{ github.event.inputs.component }}"
+      - name: Log SQL DACPAC Build Output
+        if: ${{ always() && needs.sql-dacpac-build.result == 'success' }}
+        run: |
+          echo "SQL DACPAC build completed for: ${{ github.event.inputs.component }}"

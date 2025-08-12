@@ -20,7 +20,7 @@ inputs:
   should_update_version_json:
     description: 'Should update version.json?'
     required: false
-    default: false
+    default: true
 runs:
   using: "composite"
   steps:
@@ -28,6 +28,7 @@ runs:
       id: repo_info
       run: |
         echo "REPO=${{ inputs.repo_owner }}${{ inputs.component }}" >> $GITHUB_OUTPUT
+      shell: bash
     - name: Checkout Component Repo
       uses: actions/checkout@v4
       with:
@@ -43,6 +44,7 @@ runs:
         done
       env:
         GITHUB_TOKEN: ${{ inputs.personal_access_token }}
+      shell: bash
     - name: Calculate New Version
       id: versioning
       run: |
@@ -64,6 +66,7 @@ runs:
         echo "MAJOR=$MAJOR" >> $GITHUB_OUTPUT
         echo "MINOR=$MINOR" >> $GITHUB_OUTPUT
         echo "PATCH=$PATCH" >> $GITHUB_OUTPUT
+      shell: bash
     - name: Update version.json
       if: ${{ inputs.should_update_version_json }}
       run: |
@@ -72,6 +75,7 @@ runs:
         rm version.json
         echo '{"version": "${{ steps.versioning.outputs.VERSION }}"}' > version.json
         cat version.json
+      shell: bash
     - name: Set up Node.js version
       uses: actions/setup-node@v3
       with:
@@ -80,6 +84,7 @@ runs:
       run: |
         npm install
         npm run build
+      shell: bash
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
@@ -99,6 +104,7 @@ runs:
             --repo "$REPO"
           echo "Updated $V=${!V}"
         done
+      shell: bash
     - name: Checkout Component Repo (Full History)
       uses: actions/checkout@v4
       with:
@@ -113,6 +119,7 @@ runs:
         git tag -a "${{ steps.versioning.outputs.VERSION }}" \
                  -m "Release ${{ steps.versioning.outputs.VERSION }}"
         git push origin "${{ steps.versioning.outputs.VERSION }}"
+      shell: bash
     - name: Generate Changelog
       run: |
         LAST_TAG=$(git describe --tags --abbrev=0 HEAD^)
@@ -121,6 +128,7 @@ runs:
         echo "CHANGELOG<<EOF" >> $GITHUB_ENV
         echo "$CHANGELOG" >> $GITHUB_ENV
         echo "EOF"      >> $GITHUB_ENV
+      shell: bash
     - name: Create Release on Component via gh
       run: |
         COMPONENT=${{ inputs.component }}
@@ -144,3 +152,4 @@ runs:
           --draft=false $PRE
       env:
         GITHUB_TOKEN: ${{ inputs.personal_access_token }}
+      shell: bash
