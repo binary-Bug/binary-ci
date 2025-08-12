@@ -37,6 +37,7 @@ on:
 
 jobs:
   angular-build:
+    name: Angular Build
     if: ${{ github.event.inputs.component_type == 'angular' }}
     runs-on: ubuntu-latest
     environment: "ci-angular"
@@ -57,6 +58,7 @@ jobs:
           should_update_version_json: ${{ github.event.inputs.should_update_version_json }}
 
   dotnet-build:
+    name: .NET Build
     if: ${{ github.event.inputs.component_type == '.net' }}
     runs-on: windows-latest
     environment: "ci-dotnet"
@@ -68,6 +70,7 @@ jobs:
           echo "Build logic for .NET component: ${{ github.event.inputs.component }}"
 
   sql-dacpac-build:
+    name: SQL Dacpac Build
     if: ${{ github.event.inputs.component_type == 'sql-dacpac' }}
     runs-on: windows-latest
     environment: "ci-sql-dacpac"
@@ -79,7 +82,7 @@ jobs:
           echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
 
   create-build-summary:
-    name: Build Output
+    name: ${{ join(fromJson('["' + github.event.inputs.component_type + '"]'), '')[0:1] | toUpper }}${{ github.event.inputs.component_type[1:] }} Output
     needs:
       - angular-build
       - dotnet-build
