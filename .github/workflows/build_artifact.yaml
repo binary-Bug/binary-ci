@@ -78,7 +78,8 @@ jobs:
         run: |
           echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
 
-  log-build-output:
+  create-build-summary:
+    name: Build Output
     needs:
       - angular-build
       - dotnet-build
