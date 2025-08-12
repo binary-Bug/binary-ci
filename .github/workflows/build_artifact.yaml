@@ -84,16 +84,17 @@ jobs:
       - dotnet-build
       - sql-dacpac-build
     runs-on: ubuntu-latest
+    if: ${{ always() && (needs.angular-build.result == 'success' || needs.dotnet-build.result == 'success' || needs.sql-dacpac-build.result == 'success') }}
     steps:
       - name: Log Angular Build Output
-        if: ${{ always() && needs.angular-build.result == 'success' }}
+        if: ${{ needs.angular-build.result == 'success' }}
         run: |
           echo "Angular build version: ${{ needs.angular-build.outputs.version }}"
       - name: Log .NET Build Output
-        if: ${{ always() && needs.dotnet-build.result == 'success' }}
+        if: ${{ needs.dotnet-build.result == 'success' }}
         run: |
           echo "Dotnet build completed for: ${{ github.event.inputs.component }}"
       - name: Log SQL DACPAC Build Output
-        if: ${{ always() && needs.sql-dacpac-build.result == 'success' }}
+        if: ${{ needs.sql-dacpac-build.result == 'success' }}
         run: |
           echo "SQL DACPAC build completed for: ${{ github.event.inputs.component }}"
