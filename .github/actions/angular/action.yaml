@@ -21,6 +21,10 @@ inputs:
     description: 'Should update version.json?'
     required: false
     default: true
+outputs:
+  VERSION:
+    description: 'The calculated version'
+    value: ${{ steps.versioning.outputs.VERSION }}
 runs:
   using: "composite"
   steps:
