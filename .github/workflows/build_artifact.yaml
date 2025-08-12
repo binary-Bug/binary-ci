@@ -98,3 +98,22 @@ jobs:
         if: ${{ needs.sql-dacpac-build.result == 'success' }}
         run: |
           echo "SQL DACPAC build completed for: ${{ github.event.inputs.component }}"
+      - name: Create Job Summary
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          if [[ '${{ needs.angular-build.result }}' == 'success' ]]; then
+            echo "- **Component:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Type:** Angular" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** ${{ needs.angular-build.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          elif [[ '${{ needs.dotnet-build.result }}' == 'success' ]]; then
+            echo "- **Component:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Type:** .NET" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** N/A" >> $GITHUB_STEP_SUMMARY
+          elif [[ '${{ needs.sql-dacpac-build.result }}' == 'success' ]]; then
+            echo "- **Component:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Type:** SQL DACPAC" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** N/A" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No build was run." >> $GITHUB_STEP_SUMMARY
+          fi
+        shell: bash
