@@ -36,9 +36,24 @@ on:
         default: true
 
 jobs:
+  setup-job:
+    name: Setup Build Context
+    runs-on: ubuntu-latest
+    outputs:
+      component_type_capitalized: ${{ steps.capitalize_type.outputs.cap_type }}
+    steps:
+      - name: Capitalize Component Type
+        id: capitalize_type
+        run: |
+          TYPE="${{ github.event.inputs.component_type }}"
+          CAP_TYPE="$(echo ${TYPE:0:1} | tr '[:lower:]' '[:upper:]')${TYPE:1}"
+          echo "cap_type=$CAP_TYPE" >> $GITHUB_OUTPUT
+        shell: bash
+
   angular-build:
     name: Angular Build
     if: ${{ github.event.inputs.component_type == 'angular' }}
+    needs: setup-job
     runs-on: ubuntu-latest
     environment: "ci-angular"
     outputs:
@@ -60,6 +75,7 @@ jobs:
   dotnet-build:
     name: .NET Build
     if: ${{ github.event.inputs.component_type == '.net' }}
+    needs: setup-job
     runs-on: windows-latest
     environment: "ci-dotnet"
     steps:
@@ -72,6 +88,7 @@ jobs:
   sql-dacpac-build:
     name: SQL Dacpac Build
     if: ${{ github.event.inputs.component_type == 'sql-dacpac' }}
+    needs: setup-job
     runs-on: windows-latest
     environment: "ci-sql-dacpac"
     steps:
@@ -82,8 +99,9 @@ jobs:
           echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
 
   create-build-summary:
-    name: ${{ join(fromJson('["' + github.event.inputs.component_type + '"]'), '')[0:1] | toUpper }}${{ github.event.inputs.component_type[1:] }} Output
+    name: ${{ needs.setup-job.outputs.component_type_capitalized }} Output
     needs:
+      - setup-job
       - angular-build
       - dotnet-build
       - sql-dacpac-build
