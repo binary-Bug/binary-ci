@@ -1,0 +1,29 @@
+name: Delete All Artifacts
+on:
+  workflow_dispatch:
+    inputs:
+      list_only:
+        description: 'Only list artifacts (do not delete)'
+        required: false
+        type: boolean
+        default: false
+jobs:
+  delete-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List all artifacts
+        id: list
+        run: |
+          gh api repos/${{ github.repository }}/actions/artifacts > artifacts.json
+          cat artifacts.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Delete all artifacts
+        if: ${{ !github.event.inputs.list_only }}
+        run: |
+          for id in $(jq -r '.artifacts[].id' artifacts.json); do
+            echo "Deleting artifact $id"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$id
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

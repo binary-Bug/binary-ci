@@ -167,7 +167,7 @@ runs:
               "CI Run #${RUN_NUM}" \
               "${RUN_URL}"
           )" \
-          --draft=false $PRE)
+          --draft=false $PRE 2>&1 | tail -n 1)
         echo "release_url=$RELEASE_URL" >> $GITHUB_OUTPUT
       env:
         GITHUB_TOKEN: ${{ inputs.personal_access_token }}
