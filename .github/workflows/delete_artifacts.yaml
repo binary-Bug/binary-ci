@@ -29,3 +29,12 @@ jobs:
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📝 Create Artifacts Summary
+        run: |
+          echo "### 🗂️ Artifacts List" > $GITHUB_STEP_SUMMARY
+          echo "| Name | Size (KB) | Created At | Expires At | Download |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-----------|------------|------------|----------|" >> $GITHUB_STEP_SUMMARY
+          jq -r '.artifacts[] | "| " + .name + " | " + ((.size_in_bytes/1024)|tostring) + " | " + (.created_at|sub("T";" ")|sub("Z";"")) + " | " + (.expires_at|sub("T";" ")|sub("Z";"")) + " | [Download](" + .archive_download_url + ") |"' artifacts.json >> $GITHUB_STEP_SUMMARY
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
