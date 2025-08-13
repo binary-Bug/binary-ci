@@ -57,7 +57,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: "ci-angular"
     outputs:
-      version: ${{ steps.angular_build_action.outputs.VERSION }}
+      VERSION: ${{ steps.angular_build_action.outputs.VERSION }}
+      RELEASE_URL: ${{ steps.angular_build_action.outputs.RELEASE_URL }}
+      ARTIFACT_URL: ${{ steps.angular_build_action.outputs.ARTIFACT_URL }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -126,7 +128,7 @@ jobs:
           if [[ '${{ needs.angular-build.result }}' == 'success' ]]; then
             echo "- **Component:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
             echo "- **Type:** Angular" >> $GITHUB_STEP_SUMMARY
-            echo "- **Version:** ${{ needs.angular-build.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** ${{ needs.angular-build.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
           elif [[ '${{ needs.dotnet-build.result }}' == 'success' ]]; then
             echo "- **Component:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
             echo "- **Type:** .NET" >> $GITHUB_STEP_SUMMARY
@@ -141,7 +143,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "- **Release URL:** ${{ needs.angular-build.outputs.RELEASE_URL }}" >> $GITHUB_STEP_SUMMARY
-          if [[ -n "${{ needs.angular-build.outputs.ARTIFACT_URL }}" ]]; then
-            echo "- **Artifact Download:** ${{ needs.angular-build.outputs.ARTIFACT_URL }}" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "- **Artifact Download:** ${{ needs.angular-build.outputs.ARTIFACT_URL }}" >> $GITHUB_STEP_SUMMARY
         shell: bash
