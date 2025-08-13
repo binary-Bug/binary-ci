@@ -138,12 +138,10 @@ jobs:
           else
             echo "No build was run." >> $GITHUB_STEP_SUMMARY
           fi
-          if [[ -n "${{ needs.angular-build.outputs.RELEASE_URL }}" ]]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
-            echo "- **Release URL:** ${{ needs.angular-build.outputs.RELEASE_URL }}" >> $GITHUB_STEP_SUMMARY
-            if [[ -n "${{ needs.angular-build.outputs.ARTIFACT_URL }}" ]]; then
-              echo "- **Artifact Download:** ${{ needs.angular-build.outputs.ARTIFACT_URL }}" >> $GITHUB_STEP_SUMMARY
-            fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release URL:** ${{ needs.angular-build.outputs.RELEASE_URL }}" >> $GITHUB_STEP_SUMMARY
+          if [[ -n "${{ needs.angular-build.outputs.ARTIFACT_URL }}" ]]; then
+            echo "- **Artifact Download:** ${{ needs.angular-build.outputs.ARTIFACT_URL }}" >> $GITHUB_STEP_SUMMARY
           fi
         shell: bash
