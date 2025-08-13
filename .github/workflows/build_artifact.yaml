@@ -1,5 +1,6 @@
 name: Build Artifact
-run-name: "Build Artifact for ${{ github.event.inputs.component }}"
+name: '🏗️ Build Artifact'
+run-name: "🏗️ Build Artifact for ${{ github.event.inputs.component }}"
 
 on:
   workflow_dispatch:
@@ -37,7 +38,7 @@ on:
 
 jobs:
   setup-job:
-    name: Setup Build Context
+    name: '🛠️ Setup Build Context'
     runs-on: ubuntu-latest
     outputs:
       component_type_capitalized: ${{ steps.capitalize_type.outputs.cap_type }}
@@ -51,7 +52,7 @@ jobs:
         shell: bash
 
   angular-build:
-    name: Angular Build
+    name: '🅰️ ${{ needs.setup-job.outputs.component_type_capitalized }} Build'
     if: ${{ github.event.inputs.component_type == 'angular' }}
     needs: setup-job
     runs-on: ubuntu-latest
@@ -73,7 +74,7 @@ jobs:
           should_update_version_json: ${{ github.event.inputs.should_update_version_json }}
 
   dotnet-build:
-    name: .NET Build
+    name: '⚙️ ${{ needs.setup-job.outputs.component_type_capitalized }} Build'
     if: ${{ github.event.inputs.component_type == '.net' }}
     needs: setup-job
     runs-on: windows-latest
@@ -86,7 +87,7 @@ jobs:
           echo "Build logic for .NET component: ${{ github.event.inputs.component }}"
 
   sql-dacpac-build:
-    name: SQL Dacpac Build
+    name: '🗄️ ${{ needs.setup-job.outputs.component_type_capitalized }} Build'
     if: ${{ github.event.inputs.component_type == 'sql-dacpac' }}
     needs: setup-job
     runs-on: windows-latest
@@ -99,7 +100,7 @@ jobs:
           echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
 
   create-build-summary:
-    name: ${{ needs.setup-job.outputs.component_type_capitalized }} Output
+    name: '📦 ${{ needs.setup-job.outputs.component_type_capitalized }} Output'
     needs:
       - setup-job
       - angular-build

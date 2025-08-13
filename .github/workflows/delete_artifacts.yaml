@@ -1,4 +1,5 @@
-name: Delete All Artifacts
+name: '🗑️ Delete All Artifacts'
+run-name: ${{ github.event.inputs.list_only == 'true' && '📋 List Artifacts Only' || '🗑️ Delete All Artifacts' }}
 on:
   workflow_dispatch:
     inputs:
@@ -9,16 +10,17 @@ on:
         default: false
 jobs:
   delete-artifacts:
+    name: '🗑️ Delete Artifacts Job'
     runs-on: ubuntu-latest
     steps:
-      - name: List all artifacts
+      - name: 📋 List all artifacts
         id: list
         run: |
           gh api repos/${{ github.repository }}/actions/artifacts > artifacts.json
           cat artifacts.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Delete all artifacts
+      - name: ❌ Delete all artifacts
         if: ${{ !github.event.inputs.list_only }}
         run: |
           for id in $(jq -r '.artifacts[].id' artifacts.json); do
