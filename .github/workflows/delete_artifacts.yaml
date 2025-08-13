@@ -36,5 +36,11 @@ jobs:
           echo "| Name | Size (KB) | Created At | Expires At | Download |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-----------|------------|------------|----------|" >> $GITHUB_STEP_SUMMARY
           jq -r '.artifacts[] | "| " + .name + " | " + ((.size_in_bytes/1024)|tostring) + " | " + (.created_at|sub("T";" ")|sub("Z";"")) + " | " + (.expires_at|sub("T";" ")|sub("Z";"")) + " | [Download](" + .archive_download_url + ") |"' artifacts.json >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.list_only }}" != "true" ]; then
+            # Check if the delete step succeeded by looking for its exit code in the job context
+            if [ "${{ steps.delete_all_artifacts.outcome }}" = "success" ]; then
+              echo "\n✅ **All artifacts listed above have been deleted.**" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
