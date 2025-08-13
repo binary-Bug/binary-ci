@@ -1,5 +1,5 @@
 name: '🏗️ Build Artifact'
-run-name: "🏗️ Build Artifact for ${{ github.event.inputs.component }}"
+run-name: "Build Artifact for ${{ github.event.inputs.component }}"
 
 on:
   workflow_dispatch:
@@ -99,7 +99,7 @@ jobs:
           echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
 
   create-build-summary:
-    name: '📦 ${{ needs.setup-job.outputs.component_type_capitalized }} Output'
+    name: '📝 ${{ needs.setup-job.outputs.component_type_capitalized }} Output'
     needs:
       - setup-job
       - angular-build

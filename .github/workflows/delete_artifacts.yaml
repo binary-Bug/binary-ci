@@ -1,5 +1,5 @@
 name: '🗑️ Delete All Artifacts'
-run-name: ${{ github.event.inputs.list_only == 'true' && '📋 List Artifacts Only' || '🗑️ Delete All Artifacts' }}
+run-name: ${{ github.event.inputs.list_only == 'true' && 'List Artifacts Only' || 'Delete All Artifacts' }}
 on:
   workflow_dispatch:
     inputs:
@@ -10,7 +10,7 @@ on:
         default: false
 jobs:
   delete-artifacts:
-    name: '🗑️ Delete Artifacts Job'
+    name: ${{ github.event.inputs.list_only == 'true' && '📋 List Artifacts Job' || '🗑️ Delete Artifacts Job' }}
     runs-on: ubuntu-latest
     steps:
       - name: 📋 List all artifacts
