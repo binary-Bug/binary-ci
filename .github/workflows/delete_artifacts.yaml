@@ -28,7 +28,7 @@ jobs:
             gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$id
           done
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: 📝 Create Artifacts Summary
         run: |
