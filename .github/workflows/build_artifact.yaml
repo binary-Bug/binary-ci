@@ -126,7 +126,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       - name: Dotnet Build Action
-        id: donet_build_action
+        id: dotnet_build_action
         uses: ./.github/build_actions/dotnet
         with:
           component: ${{ github.event.inputs.component }}
