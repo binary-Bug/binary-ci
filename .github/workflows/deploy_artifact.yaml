@@ -71,7 +71,7 @@ jobs:
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
   deployment-summary:
-    name: '📝 Deployment Summary'
+    name: '📝 Output'
     needs:
       - setup-deployment
       - download-artifact
