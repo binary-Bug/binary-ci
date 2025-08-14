@@ -138,14 +138,21 @@ jobs:
     name: 'SQL Dacpac Build'
     if: ${{ github.event.inputs.component_type == 'sql-dacpac' }}
     needs: setup-job
-    runs-on: windows-latest
+    runs-on: windows-2019
     environment: "ci-sql-dacpac"
+    outputs:
+      VERSION: ${{ steps.sql_dacpac_build_action.outputs.VERSION }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      - name: Placeholder for SQL DACPAC build
-        run: |
-          echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
+      - name: SQL Dacpac Build Action
+        id: sql_dacpac_build_action
+        uses: ./.github/build_actions/sql-dacpac
+        with:
+          component: ${{ github.event.inputs.component }}
+          personal_access_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          repo_name: ${{ needs.setup-job.outputs.repo_name }}
+          version: ${{ needs.setup-job.outputs.version }}
 
   finalize-release:
     name: '🚀 Finalize Release'
@@ -246,11 +253,11 @@ jobs:
       - name: Log .NET Build Output
         if: ${{ needs.dotnet-build.result == 'success' }}
         run: |
-          echo "Dotnet build completed for: ${{ github.event.inputs.component }}"
+          echo "Dotnet build version: ${{ needs.dotnet-build.outputs.VERSION }}"
       - name: Log SQL DACPAC Build Output
         if: ${{ needs.sql-dacpac-build.result == 'success' }}
         run: |
-          echo "SQL DACPAC build completed for: ${{ github.event.inputs.component }}"
+          echo "SQL DACPAC build version: ${{ needs.sql-dacpac-build.outputs.VERSION }}"
       - name: Create Job Summary
         run: |
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
@@ -265,7 +272,7 @@ jobs:
           elif [[ '${{ needs.sql-dacpac-build.result }}' == 'success' ]]; then
             echo "- **Component:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
             echo "- **Type:** SQL DACPAC" >> $GITHUB_STEP_SUMMARY
-            echo "- **Version:** N/A" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** ${{ needs.sql-dacpac-build.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
           else
             echo "No build was run." >> $GITHUB_STEP_SUMMARY
           fi

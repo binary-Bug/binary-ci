@@ -1,5 +1,5 @@
 name: 'Dotnet Build Action'
-description: 'Reusable action for building .NET components and creating releases.'
+description: 'Reusable action for building .NET components.'
 inputs:
   repo_name:
     description: 'Full repository name (owner/repo)'
