@@ -1,2 +1,45 @@
-# Placeholder for .NET build action
-# Move dotnet-build job steps here later
+name: 'Dotnet Build Action'
+description: 'Reusable action for building .NET components and creating releases.'
+inputs:
+  repo_name:
+    description: 'Full repository name (owner/repo)'
+    required: true
+  version:
+    description: 'Version string (e.g., v1.2.3)'
+    required: true
+  component:
+    description: 'Component name (e.g., piggy-ui)'
+    required: true
+  personal_access_token:
+    description: 'GitHub Personal Access Token'
+    required: true
+outputs:
+  VERSION:
+    description: 'The calculated version'
+    value: ${{ inputs.version }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Component Repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repo_name }}
+        token: ${{ inputs.personal_access_token }}
+        ref: master
+    - name: Set up .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.x'
+    - name: Build .NET App
+      run: dotnet build --configuration Release
+      shell: bash
+    - name: Publish .NET App
+      run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      shell: bash
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.component }}-${{ inputs.version }}
+        path: ${{env.DOTNET_ROOT}}/myapp
+    - name: Checkout Repository
+      uses: actions/checkout@v4

@@ -107,7 +107,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Angular Build Action
         id: angular_build_action
-        uses: ./.github/actions/angular
+        uses: ./.github/build_actions/angular
         with:
           component: ${{ github.event.inputs.component }}
           personal_access_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
@@ -119,14 +119,19 @@ jobs:
     name: '.NET Build'
     if: ${{ github.event.inputs.component_type == '.net' }}
     needs: setup-job
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     environment: "ci-dotnet"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      - name: Placeholder for .NET build
-        run: |
-          echo "Build logic for .NET component: ${{ github.event.inputs.component }}"
+      - name: Dotnet Build Action
+        id: donet_build_action
+        uses: ./.github/build_actions/dotnet
+        with:
+          component: ${{ github.event.inputs.component }}
+          personal_access_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          repo_name: ${{ needs.setup-job.outputs.repo_name }}
+          version: ${{ needs.setup-job.outputs.version }}
 
   sql-dacpac-build:
     name: 'SQL Dacpac Build'
