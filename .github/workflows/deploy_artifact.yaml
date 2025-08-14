@@ -13,37 +13,48 @@ on:
           - piggy-api
           - piggy-db
       version:
-        description: "Version to deploy (e.g., 0.8.17)"
+        description: "Version to deploy (e.g., 0.8.17 or 'latest')"
         required: true
         type: string
+        default: latest
 
 jobs:
   setup-deployment:
     name: 'Setup Deployment'
     runs-on: ubuntu-latest
     outputs:
-      artifact_name: ${{ steps.build_name.outputs.artifact_name }}
-      run_id: ${{ steps.find_run.outputs.run_id }}
+      artifact_name: ${{ steps.find_artifact_and_run_id.outputs.artifact_name }}
+      run_id: ${{ steps.find_artifact_and_run_id.outputs.run_id }}
     steps:
-      - name: Build artifact name
-        id: build_name
-        run: |
-          ARTIFACT_NAME="${{ github.event.inputs.component }}-v${{ github.event.inputs.version }}"
-          echo "The artifact to download is $ARTIFACT_NAME"
-          echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
-      - name: Find workflow run id for artifact
-        id: find_run
+      - name: Find artifact and run id
+        id: find_artifact_and_run_id
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          ARTIFACT_NAME="${{ steps.build_name.outputs.artifact_name }}"
-          RUN_ID=$(gh api repos/${{ github.repository }}/actions/artifacts \
-            --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .workflow_run.id" | head -n 1)
-          if [ -z "$RUN_ID" ]; then
-            echo "No workflow run found for artifact $ARTIFACT_NAME" >&2
-            exit 1
+          COMPONENT="${{ github.event.inputs.component }}"
+          VERSION="${{ github.event.inputs.version }}"
+          if [ "$VERSION" = "latest" ]; then
+            # Find all artifacts for the component, sort by created_at desc, pick the latest
+            gh api repos/${{ github.repository }}/actions/artifacts --jq \
+              ".artifacts[] | select(.name | test(\"^$COMPONENT-v\\d+\\.\\d+\\.\\d+$\")) | {name, created_at, run_id: .workflow_run.id}" > artifacts.json
+            LATEST=$(jq -r 'sort_by(.created_at) | reverse | .[0]' artifacts.json)
+            ARTIFACT_NAME=$(echo "$LATEST" | jq -r '.name')
+            RUN_ID=$(echo "$LATEST" | jq -r '.run_id')
+            if [ "$ARTIFACT_NAME" = "null" ] || [ -z "$ARTIFACT_NAME" ]; then
+              echo "No artifact found for component $COMPONENT" >&2
+              exit 1
+            fi
+          else
+            ARTIFACT_NAME="$COMPONENT-v$VERSION"
+            RUN_ID=$(gh api repos/${{ github.repository }}/actions/artifacts \
+              --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .workflow_run.id" | head -n 1)
+            if [ -z "$RUN_ID" ]; then
+              echo "No workflow run found for artifact $ARTIFACT_NAME" >&2
+              exit 1
+            fi
           fi
-          echo "Found run id: $RUN_ID"
+          echo "The artifact to download is $ARTIFACT_NAME (run id: $RUN_ID)"
+          echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
 
   download-artifact:
@@ -58,3 +69,17 @@ jobs:
           path: ./artifact
           run-id: ${{ needs.setup-deployment.outputs.run_id }}
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+  deployment-summary:
+    name: '📝 Deployment Summary'
+    needs:
+      - setup-deployment
+      - download-artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Deployment Summary
+        run: |
+          echo "# Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Artifact Name:** ${{ needs.setup-deployment.outputs.artifact_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Workflow Run:** [View Run](https://github.com/${{ github.repository }}/actions/runs/${{ needs.setup-deployment.outputs.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID:** ${{ needs.setup-deployment.outputs.run_id }}" >> $GITHUB_STEP_SUMMARY
