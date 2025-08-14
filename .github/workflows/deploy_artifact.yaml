@@ -58,7 +58,3 @@ jobs:
           path: ./artifact
           run-id: ${{ needs.setup-deployment.outputs.run_id }}
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - name: list artifacts
-        run: |
-          echo "Listing downloaded artifacts:"
-          ls -l
