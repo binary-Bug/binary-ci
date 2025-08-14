@@ -34,7 +34,7 @@ jobs:
       - name: Find workflow run id for artifact
         id: find_run
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           ARTIFACT_NAME="${{ steps.build_name.outputs.artifact_name }}"
           RUN_ID=$(gh api repos/${{ github.repository }}/actions/artifacts \
@@ -57,6 +57,7 @@ jobs:
           name: ${{ needs.setup-deployment.outputs.artifact_name }}
           path: ./artifact
           run-id: ${{ needs.setup-deployment.outputs.run_id }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: list artifacts
         run: |
           echo "Listing downloaded artifacts:"
