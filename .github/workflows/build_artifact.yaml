@@ -41,6 +41,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       component_type_capitalized: ${{ steps.capitalize_type.outputs.cap_type }}
+      repo_name: ${{ steps.compose_repo.outputs.repo_name }}
+      major: ${{ steps.versioning.outputs.major }}
+      minor: ${{ steps.versioning.outputs.minor }}
+      patch: ${{ steps.versioning.outputs.patch }}
+      version: ${{ steps.versioning.outputs.version }}
     steps:
       - name: Capitalize Component Type
         id: capitalize_type
@@ -48,6 +53,44 @@ jobs:
           TYPE="${{ github.event.inputs.component_type }}"
           CAP_TYPE="$(echo ${TYPE:0:1} | tr '[:lower:]' '[:upper:]')${TYPE:1}"
           echo "cap_type=$CAP_TYPE" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: Compose Repository Name
+        id: compose_repo
+        run: |
+          REPO_NAME="${{ vars.REPO_OWNER }}${{ github.event.inputs.component }}"
+          echo "repo_name=$REPO_NAME" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: Fetch current version variables
+        id: fetch_vars
+        run: |
+          for V in MAJOR MINOR PATCH; do
+            VAL=$(gh variable get "$V" --repo "${{ steps.compose_repo.outputs.repo_name }}")
+            echo "$V=$VAL" >> $GITHUB_ENV
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        shell: bash
+      - name: Calculate New Version
+        id: versioning
+        run: |
+          MAJOR=${MAJOR}
+          MINOR=${MINOR}
+          PATCH=${PATCH}
+          if [[ "${{ github.event.inputs.release_type }}" == "major" ]]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [[ "${{ github.event.inputs.release_type }}" == "minor" ]]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+          VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
+          echo "patch=$PATCH" >> $GITHUB_OUTPUT
         shell: bash
 
   angular-build:
@@ -73,6 +116,11 @@ jobs:
           release_type: ${{ github.event.inputs.release_type }}
           is_pre_release: ${{ github.event.inputs.is_pre_release }}
           should_update_version_json: ${{ github.event.inputs.should_update_version_json }}
+          repo_name: ${{ needs.setup-job.outputs.repo_name }}
+          version: ${{ needs.setup-job.outputs.version }}
+          major: ${{ needs.setup-job.outputs.major }}
+          minor: ${{ needs.setup-job.outputs.minor }}
+          patch: ${{ needs.setup-job.outputs.patch }}
 
   dotnet-build:
     name: '.NET Build'

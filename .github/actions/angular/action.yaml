@@ -1,6 +1,21 @@
 name: 'Angular Build Action'
 description: 'Reusable action for building Angular components and creating releases.'
 inputs:
+  repo_name:
+    description: 'Full repository name (owner/repo)'
+    required: true
+  version:
+    description: 'Version string (e.g., v1.2.3)'
+    required: true
+  major:
+    description: 'Major version number'
+    required: true
+  minor:
+    description: 'Minor version number'
+    required: true
+  patch:
+    description: 'Patch version number'
+    required: true
   component:
     description: 'Component name (e.g., piggy-ui)'
     required: true
@@ -34,56 +49,19 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Compose Repository Name
-      id: repo_info
-      run: |
-        echo "REPO=${{ inputs.repo_owner }}${{ inputs.component }}" >> $GITHUB_OUTPUT
-      shell: bash
     - name: Checkout Component Repo
       uses: actions/checkout@v4
       with:
-        repository: ${{ steps.repo_info.outputs.REPO }}
+        repository: ${{ inputs.repo_name }}
         token: ${{ inputs.personal_access_token }}
         ref: master
-    - name: Fetch current version variables
-      id: fetch_vars
-      run: |
-        for V in MAJOR MINOR PATCH; do
-          VAL=$(gh variable get "$V" --repo "${{ steps.repo_info.outputs.REPO }}")
-          echo "$V=$VAL" >> $GITHUB_ENV
-        done
-      env:
-        GITHUB_TOKEN: ${{ inputs.personal_access_token }}
-      shell: bash
-    - name: Calculate New Version
-      id: versioning
-      run: |
-        MAJOR=${{ env.MAJOR }}
-        MINOR=${{ env.MINOR }}
-        PATCH=${{ env.PATCH }}
-        if [[ "${{ inputs.release_type }}" == "major" ]]; then
-          MAJOR=$((MAJOR + 1))
-          MINOR=0
-          PATCH=0
-        elif [[ "${{ inputs.release_type }}" == "minor" ]]; then
-          MINOR=$((MINOR + 1))
-          PATCH=0
-        else
-          PATCH=$((PATCH + 1))
-        fi
-        VERSION="v${MAJOR}.${MINOR}.${PATCH}"
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        echo "MAJOR=$MAJOR" >> $GITHUB_OUTPUT
-        echo "MINOR=$MINOR" >> $GITHUB_OUTPUT
-        echo "PATCH=$PATCH" >> $GITHUB_OUTPUT
-      shell: bash
     - name: Update version.json
       if: ${{ inputs.should_update_version_json }}
       run: |
         cd src/configs
         cat version.json
         rm version.json
-        echo '{"version": "${{ steps.versioning.outputs.VERSION }}"}' > version.json
+        echo '{"version": "${{ inputs.version }}"}' > version.json
         cat version.json
       shell: bash
     - name: Set up Node.js version
@@ -98,22 +76,22 @@ runs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.component }}-${{ steps.versioning.outputs.VERSION }}
+        name: ${{ inputs.component }}-${{ inputs.version }}
         path: "dist/${{ inputs.component }}/browser/"
     - name: Set Artifact Download URL
       id: artifact_url
       run: |
-        ARTIFACT_NAME="${{ inputs.component }}-${{ steps.versioning.outputs.VERSION }}"
+        ARTIFACT_NAME="${{ inputs.component }}-${{ inputs.version }}"
         ARTIFACT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         echo "artifact_url=$ARTIFACT_URL" >> $GITHUB_OUTPUT
       shell: bash
     - name: Update version variables in component repo
       env:
         GH_TOKEN: ${{ inputs.personal_access_token }}
-        REPO: ${{ steps.repo_info.outputs.REPO }}
-        MAJOR: ${{ steps.versioning.outputs.MAJOR }}
-        MINOR: ${{ steps.versioning.outputs.MINOR }}
-        PATCH: ${{ steps.versioning.outputs.PATCH }}
+        REPO: ${{ inputs.repo_name }}
+        MAJOR: ${{ inputs.major }}
+        MINOR: ${{ inputs.minor }}
+        PATCH: ${{ inputs.patch }}
       run: |
         for V in MAJOR MINOR PATCH; do
           gh variable set "$V" \
@@ -125,7 +103,7 @@ runs:
     - name: Checkout Component Repo (Full History)
       uses: actions/checkout@v4
       with:
-        repository: ${{ steps.repo_info.outputs.REPO }}
+        repository: ${{ inputs.repo_name }}
         token: ${{ inputs.personal_access_token }}
         ref: master
         fetch-depth: 0
@@ -133,9 +111,9 @@ runs:
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git tag -a "${{ steps.versioning.outputs.VERSION }}" \
-                 -m "Release ${{ steps.versioning.outputs.VERSION }}"
-        git push origin "${{ steps.versioning.outputs.VERSION }}"
+        git tag -a "${{ inputs.version }}" \
+                 -m "Release ${{ inputs.version }}"
+        git push origin "${{ inputs.version }}"
       shell: bash
     - name: Generate Changelog
       run: |
@@ -150,7 +128,7 @@ runs:
       id: create_release
       run: |
         COMPONENT=${{ inputs.component }}
-        TAG=${{ steps.versioning.outputs.VERSION }}
+        TAG=${{ inputs.version }}
         if [[ "${{ inputs.is_pre_release }}" == "true" ]]; then
           PRE="--prerelease"
         else
@@ -159,7 +137,7 @@ runs:
         RUN_NUM=${{ github.run_number }}
         RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         gh release create "$TAG" \
-          --repo "${{ steps.repo_info.outputs.REPO }}" \
+          --repo "${{ inputs.repo_name }}" \
           --title "${{ github.ref_name }} $TAG" \
           --notes "$(
             printf '## Changelog\n%s\n\n**Workflow run**: [%s](%s)\n\n_Generated by Binary CI_\n' \
@@ -169,7 +147,7 @@ runs:
           )" \
           --draft=false $PRE
         # Manually build the release URL
-        REPO_URL="https://github.com/${{ steps.repo_info.outputs.REPO }}"
+        REPO_URL="https://github.com/${{ inputs.repo_name }}"
         RELEASE_URL="$REPO_URL/releases/tag/$TAG"
         echo "release_url=$RELEASE_URL" >> $GITHUB_OUTPUT
       env:
