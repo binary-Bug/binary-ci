@@ -61,4 +61,4 @@ jobs:
       - name: list artifacts
         run: |
           echo "Listing downloaded artifacts:"
-          ls -l ./artifact
+          ls -l
