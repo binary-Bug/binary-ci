@@ -1,0 +1,39 @@
+name: "🚀 Deploy Artifact"
+run-name: "Deploy Artifact for ${{ github.event.inputs.component }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: "Select component"
+        required: true
+        type: choice
+        options:
+          - piggy-ui
+          - piggy-api
+          - piggy-db
+      version:
+        description: "Version to deploy (e.g., 0.8.17)"
+        required: true
+        type: string
+
+jobs:
+  download-artifact:
+    name: 'Download Artifact'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build artifact name
+        id: build_name
+        run: |
+          ARTIFACT_NAME="${{ github.event.inputs.component }}-v${{ github.event.inputs.version }}"
+          echo "The artifact to download is $ARTIFACT_NAME"
+          echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+      - name: Download artifact from github storage
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.build_name.outputs.artifact_name }}
+          path: ./artifact
+      - name: list artifacts
+        run: |
+          echo "Listing downloaded artifacts:"
+          ls -l ./artifact
