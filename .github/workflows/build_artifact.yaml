@@ -142,16 +142,16 @@ jobs:
           echo "Build logic for SQL DACPAC component: ${{ github.event.inputs.component }}"
 
   finalize-release:
-    outputs:
-      release_url: ${{ steps.create_release.outputs.release_url }}
     name: '🚀 Finalize Release'
     needs:
       - setup-job
       - angular-build
       - dotnet-build
       - sql-dacpac-build
-    if: ${{ needs.angular-build.result == 'success' || needs.dotnet-build.result == 'success' || needs.sql-dacpac-build.result == 'success' }}
     runs-on: ubuntu-latest
+    if: ${{ always() && (needs.angular-build.result == 'success' || needs.dotnet-build.result == 'success' || needs.sql-dacpac-build.result == 'success') }}
+    outputs:
+      release_url: ${{ steps.create_release.outputs.release_url }}
     steps:
       - name: Checkout Component Repo (Full History)
         uses: actions/checkout@v4
