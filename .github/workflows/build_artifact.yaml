@@ -138,7 +138,7 @@ jobs:
     name: 'SQL Dacpac Build'
     if: ${{ github.event.inputs.component_type == 'sql-dacpac' }}
     needs: setup-job
-    runs-on: windows-2019
+    runs-on: windows-latest
     environment: "ci-sql-dacpac"
     outputs:
       VERSION: ${{ steps.sql_dacpac_build_action.outputs.VERSION }}
