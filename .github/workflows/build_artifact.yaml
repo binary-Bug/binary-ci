@@ -102,7 +102,6 @@ jobs:
     outputs:
       VERSION: ${{ steps.angular_build_action.outputs.VERSION }}
       RELEASE_URL: ${{ steps.angular_build_action.outputs.RELEASE_URL }}
-      ARTIFACT_URL: ${{ steps.angular_build_action.outputs.ARTIFACT_URL }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -191,5 +190,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "- **Release URL:** ${{ needs.angular-build.outputs.RELEASE_URL }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Artifact Download:** ${{ needs.angular-build.outputs.ARTIFACT_URL }}" >> $GITHUB_STEP_SUMMARY
         shell: bash

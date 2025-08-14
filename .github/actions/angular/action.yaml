@@ -39,13 +39,10 @@ inputs:
 outputs:
   VERSION:
     description: 'The calculated version'
-    value: ${{ steps.versioning.outputs.VERSION }}
+    value: ${{ inputs.version }}
   RELEASE_URL:
     description: 'The GitHub release URL'
     value: ${{ steps.create_release.outputs.release_url }}
-  ARTIFACT_URL:
-    description: 'The GitHub Actions artifact download URL'
-    value: ${{ steps.artifact_url.outputs.artifact_url }}
 runs:
   using: "composite"
   steps:
@@ -78,13 +75,6 @@ runs:
       with:
         name: ${{ inputs.component }}-${{ inputs.version }}
         path: "dist/${{ inputs.component }}/browser/"
-    - name: Set Artifact Download URL
-      id: artifact_url
-      run: |
-        ARTIFACT_NAME="${{ inputs.component }}-${{ inputs.version }}"
-        ARTIFACT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        echo "artifact_url=$ARTIFACT_URL" >> $GITHUB_OUTPUT
-      shell: bash
     - name: Update version variables in component repo
       env:
         GH_TOKEN: ${{ inputs.personal_access_token }}
