@@ -101,7 +101,6 @@ jobs:
     environment: "ci-angular"
     outputs:
       VERSION: ${{ steps.angular_build_action.outputs.VERSION }}
-      RELEASE_URL: ${{ steps.angular_build_action.outputs.RELEASE_URL }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -121,6 +120,8 @@ jobs:
     needs: setup-job
     runs-on: ubuntu-latest
     environment: "ci-dotnet"
+    outputs:
+      VERSION: ${{ steps.dotnet_build_action.outputs.VERSION }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -260,7 +261,7 @@ jobs:
           elif [[ '${{ needs.dotnet-build.result }}' == 'success' ]]; then
             echo "- **Component:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
             echo "- **Type:** .NET" >> $GITHUB_STEP_SUMMARY
-            echo "- **Version:** N/A" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** ${{ needs.dotnet-build.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
           elif [[ '${{ needs.sql-dacpac-build.result }}' == 'success' ]]; then
             echo "- **Component:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
             echo "- **Type:** SQL DACPAC" >> $GITHUB_STEP_SUMMARY
