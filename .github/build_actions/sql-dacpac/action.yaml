@@ -48,7 +48,7 @@ runs:
       shell: pwsh
     # Publish artifact
     - name: Upload Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ${{ inputs.component }}-${{ inputs.version }}
         path: ${{ github.workspace }}/bin/Release/ 

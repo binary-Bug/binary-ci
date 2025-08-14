@@ -37,7 +37,7 @@ runs:
       run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
       shell: bash
     - name: Upload Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ${{ inputs.component }}-${{ inputs.version }}
         path: ${{env.DOTNET_ROOT}}/myapp
