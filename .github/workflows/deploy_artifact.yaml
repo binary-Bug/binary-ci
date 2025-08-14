@@ -36,7 +36,7 @@ jobs:
           if [ "$VERSION" = "latest" ]; then
             # Find all artifacts for the component, sort by created_at desc, pick the latest
             gh api repos/${{ github.repository }}/actions/artifacts --jq \
-              ".artifacts[] | select(.name | test(\"^$COMPONENT-v\\d+\\.\\d+\\.\\d+$\")) | {name, created_at, run_id: .workflow_run.id}" > artifacts.json
+              ".artifacts[] | select(.name | test(\"^$COMPONENT-v[0-9]+\\.[0-9]+\\.[0-9]+$\")) | {name, created_at, run_id: .workflow_run.id}" > artifacts.json
             LATEST=$(jq -r 'sort_by(.created_at) | reverse | .[0]' artifacts.json)
             ARTIFACT_NAME=$(echo "$LATEST" | jq -r '.name')
             RUN_ID=$(echo "$LATEST" | jq -r '.run_id')
