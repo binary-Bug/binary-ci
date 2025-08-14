@@ -18,9 +18,12 @@ on:
         type: string
 
 jobs:
-  download-artifact:
-    name: 'Download Artifact'
+  setup-deployment:
+    name: 'Setup Deployment'
     runs-on: ubuntu-latest
+    outputs:
+      artifact_name: ${{ steps.build_name.outputs.artifact_name }}
+      run_id: ${{ steps.find_run.outputs.run_id }}
     steps:
       - name: Build artifact name
         id: build_name
@@ -28,11 +31,32 @@ jobs:
           ARTIFACT_NAME="${{ github.event.inputs.component }}-v${{ github.event.inputs.version }}"
           echo "The artifact to download is $ARTIFACT_NAME"
           echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+      - name: Find workflow run id for artifact
+        id: find_run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARTIFACT_NAME="${{ steps.build_name.outputs.artifact_name }}"
+          RUN_ID=$(gh api repos/${{ github.repository }}/actions/artifacts \
+            --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .workflow_run.id" | head -n 1)
+          if [ -z "$RUN_ID" ]; then
+            echo "No workflow run found for artifact $ARTIFACT_NAME" >&2
+            exit 1
+          fi
+          echo "Found run id: $RUN_ID"
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+
+  download-artifact:
+    name: 'Download Artifact'
+    needs: setup-deployment
+    runs-on: ubuntu-latest
+    steps:
       - name: Download artifact from github storage
         uses: actions/download-artifact@v4
         with:
-          name: ${{ steps.build_name.outputs.artifact_name }}
+          name: ${{ needs.setup-deployment.outputs.artifact_name }}
           path: ./artifact
+          run-id: ${{ needs.setup-deployment.outputs.run_id }}
       - name: list artifacts
         run: |
           echo "Listing downloaded artifacts:"
