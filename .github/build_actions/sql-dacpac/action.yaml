@@ -26,13 +26,25 @@ runs:
         repository: ${{ inputs.repo_name }}
         token: ${{ inputs.personal_access_token }}
         ref: master
+    - name: Find .sqlproj file and extract project name
+      id: find_sqlproj
+      run: |
+        file=$(find . -name '*.sqlproj' | head -n 1)
+        if [ -z "$file" ]; then
+          echo "No .sqlproj file found!" >&2
+          exit 1
+        fi
+        project_name=$(basename "$file" .sqlproj)
+        echo "Found SQL project: $project_name ($file)"
+        echo "project_name=$project_name" >> $GITHUB_OUTPUT
+      shell: bash
     # Find msbuild
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
     # create dacpac using MSBUILD
     - name: Build Database project
       run: |
-        msbuild PIGGY_UI.sqlproj -property:Configuration=Release
+        msbuild ${{ steps.find_sqlproj.outputs.project_name }}.sqlproj -property:Configuration=Release
       shell: pwsh
     # Publish artifact
     - name: Upload Artifact
