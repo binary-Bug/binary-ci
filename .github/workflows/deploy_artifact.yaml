@@ -104,6 +104,38 @@ jobs:
           publish-profile: ${{ secrets.PIGGY_API_AZURE_PUBLISH_PROFILE }}
           package: ./artifact
 
+  deploy-sql-database:
+    name: 'Deploy SQL Database'
+    needs:
+      - setup-deployment
+    if: ${{ github.event.inputs.resource_type == 'Azure SQL database' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact from github storage
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ needs.setup-deployment.outputs.artifact_name }}
+          path: ./artifact
+          run-id: ${{ needs.setup-deployment.outputs.run_id }}
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - name: List
+        run: |
+          echo "all"
+          ls -al .
+          echo "artifact folder"
+          ls -al ./artifact
+      # - name: 'piggy-db'
+      #   id: deploy-piggy-db
+      #   if: ${{ github.event.inputs.component == 'piggy-db' }}
+      #   uses: Azure/sql-action@v2.3
+      #   with:
+      #     # The connection string, including authentication information, for the Azure SQL Database.
+      #     connection-string: '${{ secrets.PIGGY_SQL_CONNECTION_STRING }}'
+      #     # Path to the dacpac file in the artifact
+      #     path: './artifact/PIGGY_UI.dacpac'
+      #     # Action we want it to do, in this case 'Publish' the contents of the dacpac to the database
+      #     action: 'publish'
+
   deployment-summary:
     name: '📝 Output'
     needs:
