@@ -118,18 +118,6 @@ jobs:
           path: ./artifact
           run-id: ${{ needs.setup-deployment.outputs.run_id }}
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - name: List
-        run: |
-          echo "check runner"
-          ls /home/runner
-          echo "check actions-runner"
-          ls /home/runner/actions-runner
-          echo "check work"
-          ls /home/runner/work
-      - name: Check sqlpackage
-        run: |
-          which sqlpackage
-          sqlpackage /?
       - name: 'piggy-db'
         id: deploy-piggy-db
         if: ${{ github.event.inputs.component == 'piggy-db' }}
