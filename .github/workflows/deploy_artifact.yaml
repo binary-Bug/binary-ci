@@ -118,6 +118,12 @@ jobs:
           path: ./artifact
           run-id: ${{ needs.setup-deployment.outputs.run_id }}
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - name: Install sqlpackage and add to PATH
+        run: |
+          wget -O sqlpackage.zip https://aka.ms/sqlpackage-linux
+          unzip -o sqlpackage.zip -d sqlpackage
+          chmod +x sqlpackage/sqlpackage
+          echo "$PWD/sqlpackage" >> $GITHUB_PATH
       - name: 'piggy-db'
         id: deploy-piggy-db
         if: ${{ github.event.inputs.component == 'piggy-db' }}
