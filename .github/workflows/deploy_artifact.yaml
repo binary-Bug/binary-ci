@@ -120,19 +120,12 @@ jobs:
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: List
         run: |
-          echo "all"
-          ls .
-          echo "artifact folder"
-          ls ./artifact
-          echo "check home"
-          ls /home
           echo "check runner"
           ls /home/runner
-          echo "checking sqlpackage"
-          echo $GITHUB_PATH
-          echo "/home/runner/sqlpackage/" >> $GITHUB_PATH
-          echo "updated path"
-          echo $GITHUB_PATH
+          echo "check actions-runner"
+          ls /home/runner/actions-runner
+          echo "check work"
+          ls /home/runner/work
       - name: Check sqlpackage
         run: |
           which sqlpackage
