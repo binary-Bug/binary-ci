@@ -124,11 +124,19 @@ jobs:
           ls .
           echo "artifact folder"
           ls ./artifact
+          echo "check home"
+          ls /home
+          echo "check runner"
+          ls /home/runner
           echo "checking sqlpackage"
           echo $GITHUB_PATH
           echo "/home/runner/sqlpackage/" >> $GITHUB_PATH
           echo "updated path"
           echo $GITHUB_PATH
+      - name: Check sqlpackage
+        run: |
+          which sqlpackage
+          sqlpackage /?
       - name: 'piggy-db'
         id: deploy-piggy-db
         if: ${{ github.event.inputs.component == 'piggy-db' }}
