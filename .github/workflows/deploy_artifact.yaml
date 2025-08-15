@@ -143,6 +143,7 @@ jobs:
       - deploy-app-service
       - deploy-sql-database
     runs-on: ubuntu-latest
+    if: always() && (needs.deploy-app-service.result == 'success' || needs.deploy-sql-database.result == 'success')
     steps:
       - name: Create Deployment Summary
         run: |
