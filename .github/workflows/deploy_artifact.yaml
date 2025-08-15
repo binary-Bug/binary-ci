@@ -17,6 +17,13 @@ on:
         required: true
         type: string
         default: latest
+      resource_type:
+        description: "Select resource type to deploy to"
+        required: true
+        type: choice
+        options:
+          - Azure App service
+          - Azure SQL database
 
 jobs:
   setup-deployment:
@@ -25,7 +32,14 @@ jobs:
     outputs:
       artifact_name: ${{ steps.find_artifact_and_run_id.outputs.artifact_name }}
       run_id: ${{ steps.find_artifact_and_run_id.outputs.run_id }}
+      formatted_component: ${{ steps.format_component.outputs.component_env }}
     steps:
+      - name: Format component as env var
+        id: format_component
+        run: |
+          COMPONENT_ENV=$(echo "${{ github.event.inputs.component }}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+          echo "Formatted component: $COMPONENT_ENV"
+          echo "component_env=$COMPONENT_ENV" >> $GITHUB_OUTPUT
       - name: Find artifact and run id
         id: find_artifact_and_run_id
         env:
@@ -69,6 +83,29 @@ jobs:
           path: ./artifact
           run-id: ${{ needs.setup-deployment.outputs.run_id }}
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  
+  deploy-app-service:
+    name: 'Deploy App Service'
+    needs:
+      - setup-deployment
+      - download-artifact
+    if: ${{ github.event.inputs.resource_type == 'Azure App service' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set publish profile secret
+        id: set_publish_profile
+        run: |
+          SECRET_NAME="${{ needs.setup-deployment.outputs.component_env }}_AZURE_PUBLISH_PROFILE"
+          echo "Using secret: $SECRET_NAME"
+          # Dynamically assign the secret value to an environment variable
+          echo "PUBLISH_PROFILE=${{ secrets[SECRET_NAME] }}" >> $GITHUB_ENV
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ github.event.inputs.component }}
+          slot-name: "Production"
+          publish-profile: ${{ env.PUBLISH_PROFILE }}
+          package: ./artifact
 
   deployment-summary:
     name: '📝 Output'
