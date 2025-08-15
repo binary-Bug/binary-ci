@@ -99,7 +99,7 @@ jobs:
         if: ${{ github.event.inputs.component == 'piggy-api' }}
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ github.event.inputs.component }}
+          app-name: dotnet-sql
           slot-name: "Production"
           publish-profile: ${{ secrets.PIGGY_API_AZURE_PUBLISH_PROFILE }}
           package: ./artifact
