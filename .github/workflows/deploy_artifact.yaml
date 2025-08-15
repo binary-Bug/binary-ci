@@ -70,10 +70,12 @@ jobs:
           echo "The artifact to download is $ARTIFACT_NAME (run id: $RUN_ID)"
           echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
-
-  download-artifact:
-    name: 'Download Artifact'
-    needs: setup-deployment
+  
+  deploy-app-service:
+    name: 'Deploy App Service'
+    needs:
+      - setup-deployment
+    if: ${{ github.event.inputs.resource_type == 'Azure App service' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact from github storage
@@ -83,39 +85,29 @@ jobs:
           path: ./artifact
           run-id: ${{ needs.setup-deployment.outputs.run_id }}
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-  
-  deploy-app-service:
-    name: 'Deploy App Service'
-    needs:
-      - setup-deployment
-      - download-artifact
-    if: ${{ github.event.inputs.resource_type == 'Azure App service' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set publish profile env var
-        id: set_publish_profile
-        run: |
-          if [ "${{ github.event.inputs.component }}" = "piggy-ui" ]; then
-            echo "PUBLISH_PROFILE=${{ secrets.PIGGY_UI_AZURE_PUBLISH_PROFILE }}" >> $GITHUB_ENV
-          elif [ "${{ github.event.inputs.component }}" = "piggy-api" ]; then
-            echo "PUBLISH_PROFILE=${{ secrets.PIGGY_API_AZURE_PUBLISH_PROFILE }}" >> $GITHUB_ENV
-          else
-            echo "Unknown component: ${{ github.event.inputs.component }}" >&2
-            exit 1
-          fi
-      - name: Deploy to Azure Web App
+      - name: 'piggy-ui'
+        id: deploy-piggy-ui
+        if: ${{ github.event.inputs.component == 'piggy-ui' }}
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ github.event.inputs.component }}
           slot-name: "Production"
           publish-profile: ${{ secrets.PIGGY_UI_AZURE_PUBLISH_PROFILE }}
           package: ./artifact
+      - name: 'piggy-api'
+        id: deploy-piggy-api
+        if: ${{ github.event.inputs.component == 'piggy-api' }}
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ github.event.inputs.component }}
+          slot-name: "Production"
+          publish-profile: ${{ secrets.PIGGY_API_AZURE_PUBLISH_PROFILE }}
+          package: ./artifact
 
   deployment-summary:
     name: '📝 Output'
     needs:
       - setup-deployment
-      - download-artifact
       - deploy-app-service
     runs-on: ubuntu-latest
     steps:
