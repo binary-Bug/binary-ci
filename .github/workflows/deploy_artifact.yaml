@@ -92,13 +92,17 @@ jobs:
     if: ${{ github.event.inputs.resource_type == 'Azure App service' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Set publish profile secret
+      - name: Set publish profile env var
         id: set_publish_profile
         run: |
-          SECRET_NAME="${{ needs.setup-deployment.outputs.component_env }}_AZURE_PUBLISH_PROFILE"
-          echo "Using secret: $SECRET_NAME"
-          # Dynamically assign the secret value to an environment variable
-          echo "PUBLISH_PROFILE=${{ secrets[SECRET_NAME] }}" >> $GITHUB_ENV
+          if [ "${{ github.event.inputs.component }}" = "piggy-ui" ]; then
+            echo "PUBLISH_PROFILE=${{ secrets.PIGGY_UI_AZURE_PUBLISH_PROFILE }}" >> $GITHUB_ENV
+          elif [ "${{ github.event.inputs.component }}" = "piggy-api" ]; then
+            echo "PUBLISH_PROFILE=${{ secrets.PIGGY_API_AZURE_PUBLISH_PROFILE }}" >> $GITHUB_ENV
+          else
+            echo "Unknown component: ${{ github.event.inputs.component }}" >&2
+            exit 1
+          fi
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
