@@ -116,6 +116,7 @@ jobs:
     needs:
       - setup-deployment
       - download-artifact
+      - deploy-app-service
     runs-on: ubuntu-latest
     steps:
       - name: Create Deployment Summary
