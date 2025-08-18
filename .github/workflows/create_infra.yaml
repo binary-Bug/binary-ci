@@ -6,9 +6,6 @@ run-name: Creating infra - ${{ github.event.inputs.env_name }}
 name: 'Create Infra'
 
 on:
-  concurrency:
-    group: create-infra
-    cancel-in-progress: true
   workflow_dispatch:
     inputs:
       env_name:
@@ -20,6 +17,10 @@ on:
         required: false
         default: false
         type: boolean
+
+concurrency:
+  group: create-infra
+  cancel-in-progress: true
 
 jobs:
   import:
