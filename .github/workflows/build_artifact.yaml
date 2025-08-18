@@ -250,7 +250,7 @@ jobs:
       - sql-dacpac-build
       - finalize-release
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.auto-deploy == 'true' }}
+    if: ${{ github.event.inputs.auto-deploy }}
     outputs:
       deploy_run_url: ${{ steps.get_deploy_url.outputs.deploy_run_url }}
     steps:
