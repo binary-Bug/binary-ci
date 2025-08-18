@@ -11,6 +11,7 @@ on:
       env_name:
         description: 'Environment name (used for resource group and name prefix)'
         required: true
+        default: "piggy"
         type: string
 
       run_import:
