@@ -13,16 +13,16 @@ on:
         required: true
         type: string
 
-      run_apply:
-        description: 'Run terraform apply?'
-        required: false
-        default: false
-        type: boolean
-
       run_import:
         description: 'Run terraform import?'
         required: false
         default: true
+        type: boolean
+
+      run_apply:
+        description: 'Run terraform apply?'
+        required: false
+        default: false
         type: boolean
 
 concurrency:
@@ -73,11 +73,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Download Terraform State
-        uses: actions/download-artifact@v4
-        with:
-          name: tfstate
-          path: infra
+      
+      # - name: Download Terraform State
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: tfstate
+      #     path: infra
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
