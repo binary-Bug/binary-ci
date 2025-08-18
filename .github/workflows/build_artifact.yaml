@@ -249,7 +249,6 @@ jobs:
       - dotnet-build
       - sql-dacpac-build
       - finalize-release
-      - create-build-summary
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.auto-deploy == 'true' }}
     outputs:
