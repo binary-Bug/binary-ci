@@ -243,7 +243,7 @@ jobs:
   # Trigger deployment workflow after build
   trigger-deploy-artifact:
     name: 'Trigger Deploy Artifact Workflow'
-    if: ${{ always() && toLower(github.event.inputs.auto-deploy || 'false') == 'true' }}
+    if: ${{ always() && github.event.inputs.auto-deploy == 'true' }}
     needs:
       - finalize-release
     runs-on: ubuntu-latest
