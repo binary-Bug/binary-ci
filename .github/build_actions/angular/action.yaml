@@ -31,7 +31,7 @@ runs:
         token: ${{ inputs.personal_access_token }}
         ref: master
     - name: Update version.json
-      if: ${{ inputs.should_update_version_json }}
+      if: ${{ inputs.should_update_version_json == 'true' }}
       run: |
         cd src/configs
         cat version.json
