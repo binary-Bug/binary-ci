@@ -57,7 +57,7 @@ jobs:
       # Import the resource group for the given env_name
       - name: Terraform Import Resource Group
         run: |
-          terraform import azurerm_resource_group.main "/subscriptions/${{ env.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.env_name }}"
+          terraform import azurerm_resource_group.main "/subscriptions/${{ env.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.env_name }}" -var "resource_group_name=${{ inputs.env_name }}" -var "name_prefix=${{ inputs.env_name }}"
       - name: Upload Terraform State
         uses: actions/upload-artifact@v4
         with:
