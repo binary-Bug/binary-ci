@@ -29,6 +29,11 @@ on:
         description: "Is this a pre-release?"
         required: false
         type: boolean
+      auto-deploy:
+        description: "Automatically trigger deployment workflow after build?"
+        required: false
+        type: boolean
+        default: true
       should_update_version_json:
         description: "Should update version.json?"
         required: false
@@ -235,6 +240,44 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         shell: bash
 
+  # Trigger deployment workflow after build
+  trigger-deploy-artifact:
+    name: 'Trigger Deploy Artifact Workflow'
+    needs:
+      - setup-job
+      - angular-build
+      - dotnet-build
+      - sql-dacpac-build
+      - finalize-release
+      - create-build-summary
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.auto-deploy == 'true' }}
+    outputs:
+      deploy_run_url: ${{ steps.get_deploy_url.outputs.deploy_run_url }}
+    steps:
+      - name: Set up GitHub CLI
+        uses: cli/cli@v3
+      - name: Trigger deploy_artifact workflow
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          gh workflow run deploy_artifact.yaml \
+            --ref ${{ github.ref }} \
+            --field component="${{ github.event.inputs.component }}" \
+            --field version="latest"
+      - name: Get triggered deploy workflow run URL
+        id: get_deploy_url
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Wait a few seconds to ensure the run is registered
+          sleep 5
+          RUN_ID=$(gh run list --workflow=deploy_artifact.yaml --branch ${{ github.ref_name }} --limit 1 --json databaseId --jq '.[0].databaseId')
+          DEPLOY_RUN_URL="https://github.com/${{ github.repository }}/actions/runs/$RUN_ID"
+          echo "Deploy workflow run URL: $DEPLOY_RUN_URL"
+          echo "DEPLOY_RUN_URL=$DEPLOY_RUN_URL" >> $GITHUB_ENV
+          echo "::set-output name=deploy_run_url::$DEPLOY_RUN_URL"
+
   create-build-summary:
     name: '📝 ${{ needs.setup-job.outputs.component_type_capitalized }} Output'
     needs:
@@ -243,6 +286,7 @@ jobs:
       - dotnet-build
       - sql-dacpac-build
       - finalize-release
+      - trigger-deploy-artifact
     runs-on: ubuntu-latest
     if: ${{ always() && (needs.angular-build.result == 'success' || needs.dotnet-build.result == 'success' || needs.sql-dacpac-build.result == 'success') }}
     steps:
@@ -279,4 +323,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "- **Release URL:** ${{ needs.finalize-release.outputs.release_url }}" >> $GITHUB_STEP_SUMMARY
+          if [[ '${{ needs.trigger-deploy-artifact.result }}' == 'success' && '${{ needs.trigger-deploy-artifact.outputs.deploy_run_url }}' != '' ]]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## 🚀 Auto Deployment Triggered" >> $GITHUB_STEP_SUMMARY
+            echo "The auto deployment workflow was triggered successfully." >> $GITHUB_STEP_SUMMARY
+            echo "- [View Deploy Workflow Run](${{ needs.trigger-deploy-artifact.outputs.deploy_run_url }})" >> $GITHUB_STEP_SUMMARY
+          fi
         shell: bash

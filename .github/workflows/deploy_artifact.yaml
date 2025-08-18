@@ -17,13 +17,6 @@ on:
         required: true
         type: string
         default: latest
-      resource_type:
-        description: "Select resource type to deploy to"
-        required: true
-        type: choice
-        options:
-          - Azure App service
-          - Azure SQL database
 
 jobs:
   setup-deployment:
@@ -33,6 +26,7 @@ jobs:
       artifact_name: ${{ steps.find_artifact_and_run_id.outputs.artifact_name }}
       run_id: ${{ steps.find_artifact_and_run_id.outputs.run_id }}
       formatted_component: ${{ steps.format_component.outputs.component_env }}
+      resource_type: ${{ steps.set_resource_type.outputs.resource_type }}
     steps:
       - name: Format component as env var
         id: format_component
@@ -40,6 +34,16 @@ jobs:
           COMPONENT_ENV=$(echo "${{ github.event.inputs.component }}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
           echo "Formatted component: $COMPONENT_ENV"
           echo "component_env=$COMPONENT_ENV" >> $GITHUB_OUTPUT
+      - name: Set resource type
+        id: set_resource_type
+        run: |
+          if [[ "${{ github.event.inputs.component }}" == "piggy-ui" || "${{ github.event.inputs.component }}" == "piggy-api" ]]; then
+            echo "resource_type=Azure App service" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.inputs.component }}" == "piggy-db" ]]; then
+            echo "resource_type=Azure SQL database" >> $GITHUB_OUTPUT
+          else
+            echo "resource_type=unknown" >> $GITHUB_OUTPUT
+          fi
       - name: Find artifact and run id
         id: find_artifact_and_run_id
         env:
@@ -75,7 +79,7 @@ jobs:
     name: 'Deploy App Service'
     needs:
       - setup-deployment
-    if: ${{ github.event.inputs.resource_type == 'Azure App service' }}
+    if: ${{ needs.setup-deployment.outputs.resource_type == 'Azure App service' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact from github storage
@@ -108,7 +112,7 @@ jobs:
     name: 'Deploy SQL Database'
     needs:
       - setup-deployment
-    if: ${{ github.event.inputs.resource_type == 'Azure SQL database' }}
+    if: ${{ needs.setup-deployment.outputs.resource_type == 'Azure SQL database' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact from github storage
