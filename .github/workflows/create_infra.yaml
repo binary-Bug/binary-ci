@@ -55,7 +55,13 @@ jobs:
         with:
           creds: ${{ secrets.AZ_CREDS }}
 
-      - name: Terraform Init (before import)
+      - name: Check Current Directory and cd to infra if needed
+        run: |
+          echo "Current directory: $(pwd)"
+          if [ "$(basename $(pwd))" != "infra" ]; then cd infra; fi
+          pwd
+
+      - name: Terraform Init
         run: terraform init
 
       # Import the resource group for the given env_name
