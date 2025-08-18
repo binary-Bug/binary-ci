@@ -51,7 +51,7 @@ jobs:
           terraform_version: 1.8.5
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZ_CREDS }}
 
@@ -100,7 +100,7 @@ jobs:
           terraform_version: 1.8.5
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZ_CREDS }}
 
@@ -133,7 +133,7 @@ jobs:
           terraform_version: 1.8.5
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZ_CREDS }}
 
