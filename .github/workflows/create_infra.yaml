@@ -55,6 +55,9 @@ jobs:
         with:
           creds: ${{ secrets.AZ_CREDS }}
 
+      - name: Show Subscription ID (debug)
+        run: echo "AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID"
+
       - name: Check Current Directory and cd to infra if needed
         run: |
           echo "Current directory: $(pwd)"
