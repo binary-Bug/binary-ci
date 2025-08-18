@@ -250,8 +250,6 @@ jobs:
     outputs:
       deploy_run_url: ${{ steps.get_deploy_url.outputs.deploy_run_url }}
     steps:
-      - name: Set up GitHub CLI
-        uses: cli/cli@v3
       - name: Trigger deploy_artifact workflow
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
