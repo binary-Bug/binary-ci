@@ -21,12 +21,13 @@ variable "location" {
 
 # For multiple app services, define as a list of objects (optional, for future use)
 variable "app_services" {
-  description = "List of app services to deploy (name, plan, sku, runtime)"
+  description = "List of app services to deploy (name, plan, sku, current_stack, stack_version)"
   type = list(object({
-    name     = string
-    plan     = string
-    sku      = string
-    runtime  = string # Windows runtime stack, e.g., "DOTNETCORE|6.0", "NODE|18-lts"
+    name          = string
+    plan          = string
+    sku           = string
+    current_stack = string
+    stack_version = string
   }))
   default = []
 }

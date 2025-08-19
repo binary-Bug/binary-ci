@@ -21,9 +21,11 @@ resource "azurerm_windows_web_app" "apps" {
 		resource_group_name = azurerm_resource_group.main.name
 		service_plan_id     = azurerm_service_plan.main.id
 
-				site_config {
-					application_stack {
-						current_stack = each.value.runtime
-					}
-				}
+		site_config {
+			application_stack {
+				current_stack      = each.value.current_stack
+				dotnet_version     = each.value.current_stack == "dotnetcore" ? each.value.stack_version : null
+				node_version       = each.value.current_stack == "node"       ? each.value.stack_version : null
+			}
+		}
 }

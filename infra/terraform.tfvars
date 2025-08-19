@@ -13,15 +13,17 @@ app_service_plan_name = "app-service-plan"
 # List of app services to deploy
 app_services = [
 	{
-		name    = "api"
-		plan    = "app-service-plan"
-		sku     = "F1"
-		runtime = "DOTNETCORE|8.0"
+		name          = "api"
+		plan          = "app-service-plan"
+		sku           = "F1"
+		current_stack = "dotnetcore"
+		stack_version = "8.0"
 	},
 	{
-		name    = "ui"
-		plan    = "app-service-plan"
-		sku     = "F1"
-		runtime = "NODE|20-lts"
+		name          = "ui"
+		plan          = "app-service-plan"
+		sku           = "F1"
+		current_stack = "node"
+		stack_version = "20-lts"
 	}
 ]
