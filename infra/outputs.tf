@@ -19,7 +19,7 @@ output "app_service_names" {
 # Output the default hostnames (URLs) for all App Services
 output "app_service_urls" {
 	description = "Default hostnames (URLs) for all App Services"
-	value       = [for app in azurerm_windows_web_app.apps : app.default_site_hostname]
+	value       = [for app in azurerm_windows_web_app.apps : app.default_hostname]
 }
 
 # Output the resource IDs of all App Services
