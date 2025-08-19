@@ -14,15 +14,16 @@ resource "azurerm_service_plan" "main" {
 }
 
 # Create multiple App Services using the app_services variable
-resource "azurerm_app_service" "apps" {
-	for_each            = { for app in var.app_services : app.name => app }
-	name                = "${var.name_prefix}-${each.value.name}"
-	location            = azurerm_resource_group.main.location
-	resource_group_name = azurerm_resource_group.main.name
-	app_service_plan_id = azurerm_service_plan.main.id
+resource "azurerm_windows_web_app" "apps" {
+		for_each            = { for app in var.app_services : app.name => app }
+		name                = "${var.name_prefix}-${each.value.name}"
+		location            = azurerm_resource_group.main.location
+		resource_group_name = azurerm_resource_group.main.name
+		service_plan_id     = azurerm_service_plan.main.id
 
-	site_config {
-		windows_fx_version = each.value.runtime
-	}
-	# Add more configuration as needed (e.g., app_settings)
+				site_config {
+					application_stack {
+						current_stack = each.value.runtime
+					}
+				}
 }
