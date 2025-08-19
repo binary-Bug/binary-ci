@@ -7,7 +7,7 @@ output "resource_group_name" {
 # Output the App Service Plan name
 output "app_service_plan_name" {
 	description = "The name of the App Service Plan"
-	value       = azurerm_app_service_plan.main.name
+	value       = azurerm_service_plan.main.name
 }
 
 # Output the names of all App Services
