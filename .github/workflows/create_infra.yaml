@@ -66,10 +66,19 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      # Import the resource group for the given env_name
+      # Import the resource group for the given env_name, handle error gracefully
       - name: Terraform Import Resource Group
         run: |
-          terraform import azurerm_resource_group.main "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.env_name }}"
+          set -e
+          IMPORT_CMD="terraform import azurerm_resource_group.main \"/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.env_name }}\""
+          echo "Running: $IMPORT_CMD"
+          if $IMPORT_CMD; then
+            echo "Terraform import succeeded."
+          else
+            echo "Terraform import failed. Resource group may not exist. Creating empty tfstate file."
+            echo '{"version":4,"resources":[]}' > terraform.tfstate
+          fi
+          exit 0
 
       - name: Upload Terraform State
         uses: actions/upload-artifact@v4
