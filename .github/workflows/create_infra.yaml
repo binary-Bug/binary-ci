@@ -73,7 +73,7 @@ jobs:
       - name: Upload Terraform State
         uses: actions/upload-artifact@v4
         with:
-          name: tfstate
+          name: tfstate-${{ inputs.rg_name }}
           path: infra/terraform.tfstate*
 
   plan:
@@ -97,7 +97,7 @@ jobs:
       - name: Download Terraform State
         uses: actions/download-artifact@v4
         with:
-          name: tfstate
+          name: tfstate-${{ inputs.rg_name }}
           path: infra
 
       - name: Set up Terraform
@@ -133,7 +133,7 @@ jobs:
       - name: Download Terraform State
         uses: actions/download-artifact@v4
         with:
-          name: tfstate
+          name: tfstate-${{ inputs.rg_name }}
           path: infra
 
       - name: Set up Terraform
