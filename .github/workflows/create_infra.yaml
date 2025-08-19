@@ -3,25 +3,25 @@
 # - Each job logs into Azure to ensure env vars are available
 
 run-name: Creating infrastructure - ${{ github.event.inputs.env_name }}
-name: '☁️ Create Infrastructure'
+name: "☁️ Create Infrastructure"
 
 on:
   workflow_dispatch:
     inputs:
       env_name:
-        description: 'Environment name (used for resource group and name prefix)'
+        description: "Environment name (used for resource group and name prefix)"
         required: true
         default: "piggy"
         type: string
 
       run_import:
-        description: 'Run terraform import?'
+        description: "Run terraform import?"
         required: false
         default: true
         type: boolean
 
       run_apply:
-        description: 'Run terraform apply?'
+        description: "Run terraform apply?"
         required: false
         default: false
         type: boolean
@@ -33,7 +33,7 @@ concurrency:
 jobs:
   import:
     if: ${{ always() && github.event.inputs.run_import == 'true' }}
-    name: 'Terraform Import'
+    name: "Terraform Import"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -41,6 +41,10 @@ jobs:
     env:
       TF_VAR_resource_group_name: ${{ inputs.env_name }}
       TF_VAR_name_prefix: ${{ inputs.env_name }}
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,23 +54,8 @@ jobs:
         with:
           terraform_version: 1.8.5
 
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZ_CREDS }}
-
       - name: Show ARM_SUBSCRIPTION_ID (debug)
         run: echo "ARM_SUBSCRIPTION_ID=$ARM_SUBSCRIPTION_ID"
-
-      - name: Show AZURE_SUBSCRIPTION_ID (debug)
-        run: echo "AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID"
-
-      - name: Azure CLI script
-        uses: azure/cli@v2
-        with:
-          azcliversion: latest
-          inlineScript: |
-            az account show
 
       - name: Check Current Directory and cd to infra if needed
         run: |
@@ -81,6 +70,7 @@ jobs:
       - name: Terraform Import Resource Group
         run: |
           terraform import azurerm_resource_group.main "/subscriptions/${{ env.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.env_name }}"
+
       - name: Upload Terraform State
         uses: actions/upload-artifact@v4
         with:
@@ -88,31 +78,42 @@ jobs:
           path: infra/terraform.tfstate*
 
   plan:
-    name: 'Terraform Init & Plan'
+    name: "Terraform Init & Plan"
     runs-on: ubuntu-latest
     needs: import
     defaults:
       run:
         working-directory: infra
+    env:
+      TF_VAR_resource_group_name: ${{ inputs.env_name }}
+      TF_VAR_name_prefix: ${{ inputs.env_name }}
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      # - name: Download Terraform State
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: tfstate
-      #     path: infra
+
+      - name: Download Terraform State
+        uses: actions/download-artifact@v4
+        with:
+          name: tfstate
+          path: infra
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.8.5
 
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZ_CREDS }}
+      - name: Show ARM_SUBSCRIPTION_ID (debug)
+        run: echo "ARM_SUBSCRIPTION_ID=$ARM_SUBSCRIPTION_ID"
+
+      - name: Check Current Directory and cd to infra if needed
+        run: |
+          echo "Current directory: $(pwd)"
+          if [ "$(basename $(pwd))" != "infra" ]; then cd infra; fi
+          pwd
 
       - name: Terraform Init
         run: terraform init
@@ -121,13 +122,20 @@ jobs:
         run: terraform plan -var "resource_group_name=${{ inputs.env_name }}" -var "name_prefix=${{ inputs.env_name }}"
 
   apply:
-    name: 'Terraform Apply'
+    name: "Terraform Apply"
     runs-on: ubuntu-latest
     needs: plan
     if: ${{ always() && github.event.inputs.run_apply == 'true' }}
     defaults:
       run:
         working-directory: infra
+    env:
+      TF_VAR_resource_group_name: ${{ inputs.env_name }}
+      TF_VAR_name_prefix: ${{ inputs.env_name }}
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -141,11 +149,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.8.5
-
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZ_CREDS }}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve -var "resource_group_name=${{ inputs.env_name }}" -var "name_prefix=${{ inputs.env_name }}"
