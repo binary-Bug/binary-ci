@@ -128,7 +128,7 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        run: terraform plan -var "resource_group_name=${{ inputs.env_name }}" -var "name_prefix=${{ inputs.env_name }}"
+        run: terraform plan -var "resource_group_name=${{ inputs.env_name }}" -var "name_prefix=${{ inputs.env_name }}" -out=tfplan
 
   apply:
     name: "Terraform Apply"

@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "main" {
 }
 
 # Create a shared App Service Plan for all app services
-resource "azurerm_app_service_plan" "main" {
+resource "azurerm_service_plan" "main" {
 	# Name is dynamically generated using the prefix
 	name                = "${var.name_prefix}-${var.app_service_plan_name}"
 	location            = azurerm_resource_group.main.location
