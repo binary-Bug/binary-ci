@@ -17,13 +17,13 @@ app_services = [
 		plan          = "app-service-plan"
 		sku           = "F1"
 		current_stack = "dotnetcore"
-		stack_version = "8.0"
+		stack_version = "v8.0"
 	},
 	{
 		name          = "ui"
 		plan          = "app-service-plan"
 		sku           = "F1"
 		current_stack = "node"
-		stack_version = "20-lts"
+		stack_version = "~20"
 	}
 ]
