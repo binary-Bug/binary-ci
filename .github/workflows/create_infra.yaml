@@ -14,12 +14,6 @@ on:
         default: "piggy"
         type: string
 
-      run_import:
-        description: "Run terraform import?"
-        required: false
-        default: true
-        type: boolean
-
       run_apply:
         description: "Run terraform apply?"
         required: false
@@ -32,7 +26,6 @@ concurrency:
 
 jobs:
   import:
-    if: ${{ always() && github.event.inputs.run_import == 'true' }}
     name: "Terraform Import"
     runs-on: ubuntu-latest
     defaults:
