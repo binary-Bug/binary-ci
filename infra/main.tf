@@ -9,8 +9,6 @@ resource "azurerm_service_plan" "main" {
 	name                = "${var.name_prefix}-${var.app_service_plan_name}"
 	location            = azurerm_resource_group.main.location
 	resource_group_name = azurerm_resource_group.main.name
-	kind                = "Windows"
-	reserved            = false
 	os_type             = "Windows"
 	sku_name            = "F1"
 }
