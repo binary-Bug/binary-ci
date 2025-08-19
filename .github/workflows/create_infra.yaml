@@ -2,7 +2,7 @@
 # - Installs Terraform, logs into Azure, runs import, init, plan, and optionally apply
 # - Each job logs into Azure to ensure env vars are available
 
-run-name: Creating infrastructure - ${{ github.event.inputs.env_name }}
+run-name: Creating infrastructure - ${{ github.event.inputs.rg_name }}
 name: "☁️ Create Infrastructure"
 
 on:
