@@ -70,7 +70,7 @@ jobs:
       - name: Terraform Import Resource Group
         run: |
           set -e
-          IMPORT_CMD="terraform import azurerm_resource_group.main \"/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.env_name }}\""
+          IMPORT_CMD="terraform import azurerm_resource_group.main "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.env_name }}""
           echo "Running: $IMPORT_CMD"
           if $IMPORT_CMD; then
             echo "Terraform import succeeded."
