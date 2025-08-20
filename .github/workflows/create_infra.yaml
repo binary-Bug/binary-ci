@@ -109,7 +109,29 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        run: terraform plan -var "resource_group_name=${{ inputs.rg_name }}" -var "name_prefix=${{ inputs.name_prefix }}" -out=tfplan
+        run: terraform plan -var "resource_group_name=${{ inputs.rg_name }}" -var "name_prefix=${{ inputs.name_prefix }}" | tee plan.txt
+
+      - name: Upload Terraform Plan Output
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-output
+          path: infra/plan.txt
+  plan-summary:
+    name: "Terraform Plan"
+    runs-on: ubuntu-latest
+    needs: plan
+    steps:
+      - name: Download Terraform Plan Output
+        uses: actions/download-artifact@v4
+        with:
+          name: plan-output
+          path: infra
+
+      - name: Add Terraform Plan to Job Summary
+        run: |
+          echo '```terraform' >> $GITHUB_STEP_SUMMARY
+          cat infra/plan.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
   apply:
     name: "Terraform Apply"
