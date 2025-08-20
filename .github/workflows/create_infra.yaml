@@ -183,6 +183,7 @@ jobs:
     if: always() # ✅ runs even if any job fails
     steps:
       - name: Delete artifacts
-        uses: geekyeggo/delete-artifact@v2
+        uses: geekyeggo/delete-artifact@v5
         with:
           name: "*"
+          failOnError: false
