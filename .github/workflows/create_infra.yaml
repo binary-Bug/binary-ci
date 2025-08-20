@@ -129,20 +129,14 @@ jobs:
 
       - name: Add Terraform Plan to Job Summary
         run: |
-          echo '## Terraform Plan Summary' >> $GITHUB_STEP_SUMMARY
           PLAN_SUMMARY=$(awk '/^Plan:/,/^$/' infra/plan.txt)
-          OUTPUTS=$(awk '/Changes to Outputs:/,0' infra/plan.txt | grep -E 'app_service_names|app_service_plan_name' | grep -v '\(known after apply\)')
-          echo "${PLAN_SUMMARY}" >> $GITHUB_STEP_SUMMARY
+          echo "**${PLAN_SUMMARY}**" >> $GITHUB_STEP_SUMMARY
           echo '' >> $GITHUB_STEP_SUMMARY
           echo '**Changes to Outputs:**' >> $GITHUB_STEP_SUMMARY
-          if echo "$OUTPUTS" | grep -q 'app_service_names'; then
-            echo '- app_service_names:' >> $GITHUB_STEP_SUMMARY
-            echo "$OUTPUTS" | grep 'app_service_names' | sed 's/.*= \[//;s/\]//' | tr -d '"' | tr ',' '\n' | awk '{print "  - "$1}' >> $GITHUB_STEP_SUMMARY
-          fi
-          if echo "$OUTPUTS" | grep -q 'app_service_plan_name'; then
-            echo '- app_service_plan_name:' >> $GITHUB_STEP_SUMMARY
-            echo "$OUTPUTS" | grep 'app_service_plan_name' | sed 's/.*= //' | tr -d '"' | awk '{print "  - "$1}' >> $GITHUB_STEP_SUMMARY
-          fi
+          # Extract app_service_names block
+          awk '/app_service_names = \[/, /\]/{if ($0 !~ /app_service_names = \[/ && $0 !~ /\]/) print "  - " $0}' infra/plan.txt | sed 's/[",]//g;s/^ *- *$/  - (none)/' >> $GITHUB_STEP_SUMMARY
+          # Extract app_service_plan_name value
+          awk '/app_service_plan_name = /{print "- app_service_plan_name:\n  - " $NF}' infra/plan.txt | sed 's/[",]//g' >> $GITHUB_STEP_SUMMARY
 
   apply:
     name: "Terraform Apply"
