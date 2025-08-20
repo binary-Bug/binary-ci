@@ -129,16 +129,9 @@ jobs:
 
       - name: Add Terraform Plan to Job Summary
         run: |
-          set +e
-          echo '## Terraform Plan Summary' >> $GITHUB_STEP_SUMMARY
-          PLAN_SUMMARY=$(grep '^Plan:' infra/plan.txt)
-          echo "**${PLAN_SUMMARY}**" >> $GITHUB_STEP_SUMMARY
+          perl -pe 's/\e\[[0-9;]*[mK]//g' infra/plan.txt > infra/clean_plan.txt
           echo '' >> $GITHUB_STEP_SUMMARY
-          echo '**Changes to Outputs:**' >> $GITHUB_STEP_SUMMARY
-          # Extract app_service_names block, strip leading + and spaces, ignore unknowns
-          awk '/app_service_names *\= *\[/, /\]/{if ($0 ~ /"/ && $0 !~ /known after apply/) print "  - " $0}' infra/plan.txt | sed 's/[+",]//g;s/^ *- *$/  - (none)/;s/^  -  */  - /' >> $GITHUB_STEP_SUMMARY
-          # Extract app_service_plan_name value, strip leading + and spaces
-          awk '/app_service_plan_name *\= /{print "- app_service_plan_name:\n  - " $NF}' infra/plan.txt | sed 's/[+",]//g' >> $GITHUB_STEP_SUMMARY
+          awk 'BEGIN{print;} /^Plan:/ {print; print "\nChanges to Outputs:\n\napp_service_names:"} /app_service_names *= *\[/ {in_block=1; next} in_block && /\]/ {in_block=0; next} in_block && /"/ {gsub(/[" ,+]/,"",$0); print "  - " $0} /app_service_plan_name *= / {print "\napp_service_plan_name:"; gsub(/[" ,+]/,"",$NF); print "  - " $NF}' clean_plan.txt >> $GITHUB_STEP_SUMMARY
 
   apply:
     name: "Terraform Apply"
