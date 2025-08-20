@@ -53,22 +53,37 @@ jobs:
         with:
           terraform_version: 1.8.5
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+
       - name: Terraform Init
         run: terraform init
 
-      # Import the resource group for the given env_name, handle error gracefully
-      - name: Terraform Import Resource Group
+      - name: Check Resource Group Existence
+        id: check_rg
         run: |
-          set -e
-          IMPORT_CMD="terraform import azurerm_resource_group.main "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.rg_name }}""
-          echo "Running: $IMPORT_CMD"
-          if $IMPORT_CMD; then
-            echo "Terraform import succeeded."
+          if az group show --name "${{ inputs.rg_name }}" --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"; then
+            echo "rg_exists=true" >> $GITHUB_ENV
           else
-            echo "Terraform import failed. Resource group may not exist. Creating empty tfstate file."
-            echo '{"version":4,"resources":[]}' > terraform.tfstate
+            echo "rg_exists=false" >> $GITHUB_ENV
           fi
-          exit 0
+
+      - name: Terraform Import Resource Group
+        if: env.rg_exists == 'true'
+        run: |
+          terraform import azurerm_resource_group.main "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.rg_name }}"
+          echo "Terraform import succeeded."
+
+      - name: Create Empty tfstate if Resource Group Not Found
+        if: env.rg_exists == 'false'
+        run: |
+          echo "Resource group not found. Creating empty tfstate file."
+          echo '{"version":4,"resources":[]}' > terraform.tfstate
 
       - name: Upload Terraform State
         uses: actions/upload-artifact@v4
