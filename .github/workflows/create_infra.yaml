@@ -116,6 +116,7 @@ jobs:
         with:
           name: plan-output
           path: infra/plan.txt
+
   plan-summary:
     name: "Terraform Plan Output"
     runs-on: ubuntu-latest
