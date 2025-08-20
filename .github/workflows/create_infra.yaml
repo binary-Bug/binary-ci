@@ -141,7 +141,7 @@ jobs:
   apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
-    needs: plan
+    needs: plan-summary
     if: ${{ always() && github.event.inputs.run_apply == 'true' }}
     defaults:
       run:
