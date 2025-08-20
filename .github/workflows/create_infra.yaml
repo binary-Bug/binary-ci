@@ -129,6 +129,7 @@ jobs:
 
       - name: Add Terraform Plan to Job Summary
         run: |
+          set +e
           echo '## Terraform Plan Summary' >> $GITHUB_STEP_SUMMARY
           PLAN_SUMMARY=$(grep '^Plan:' infra/plan.txt)
           echo "**${PLAN_SUMMARY}**" >> $GITHUB_STEP_SUMMARY
