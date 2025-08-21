@@ -89,23 +89,35 @@ jobs:
           path: ./artifact
           run-id: ${{ needs.setup-deployment.outputs.run_id }}
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - name: "piggy-ui"
-        id: deploy-piggy-ui
-        if: ${{ github.event.inputs.component == 'piggy-ui' }}
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZ_CREDS }}
+
+      - name: Find Resource Group for App
+        id: find_rg
+        run: |
+          RG=$(az webapp list --query "[?name=='${{ github.event.inputs.component }}'].resourceGroup" -o tsv)
+          if [ -z "$RG" ]; then
+            echo "Resource group not found for app ${{ github.event.inputs.component }}"
+            exit 1
+          fi
+          echo "resource_group=$RG" >> $GITHUB_OUTPUT
+
+      - name: Fetch Publish Profile
+        run: |
+          az webapp deployment list-publishing-profiles \
+            --name "${{ github.event.inputs.component }}" \
+            --resource-group "${{ steps.find_rg.outputs.resource_group }}" \
+            --xml > publishProfile.xml
+
+      - name: Deploy App Service (${{ github.event.inputs.component }})
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ github.event.inputs.component }}
           slot-name: "Production"
-          publish-profile: ${{ secrets.PIGGY_UI_AZURE_PUBLISH_PROFILE }}
-          package: ./artifact
-      - name: "piggy-api"
-        id: deploy-piggy-api
-        if: ${{ github.event.inputs.component == 'piggy-api' }}
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: dotnet-sql
-          slot-name: "Production"
-          publish-profile: ${{ secrets.PIGGY_API_AZURE_PUBLISH_PROFILE }}
+          publish-profile: publishProfile.xml
           package: ./artifact
 
   deploy-sql-database:
