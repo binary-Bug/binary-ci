@@ -183,15 +183,19 @@ jobs:
           -X POST \
           -H "Accept: application/vnd.github+json" \
           /repos/${{ vars.REPO_OWNER }}${{ github.event.inputs.component }}/deployments \
-          --raw-field ref=master \
-          --raw-field environment=Production \
-          --raw-field description="Deployed via CD pipeline" \
-          --raw-field required_contexts=[] \
-          --raw-field transient_environment=false \
-          --raw-field production_environment=true \
-          --raw-field state=success \
-          --raw-field log_url="${{ steps.deploy-app-service.outputs.app-url }}" \
-          --raw-field environment_url="${{ steps.deploy-app-service.outputs.app-url }}"
+          --input - <<EOF
+          {
+            "ref": "master",
+            "environment": "Production",
+            "description": "Deployed via CD pipeline",
+            "required_contexts": [],
+            "transient_environment": false,
+            "production_environment": true,
+            "state": "success",
+            "log_url": "${{ steps.deploy-app-service.outputs.app-url }}",
+            "environment_url": "${{ steps.deploy-app-service.outputs.app-url }}"
+          }
+          EOF
 
   deployment-summary:
     name: "📝 Output"
