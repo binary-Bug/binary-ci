@@ -118,10 +118,6 @@ jobs:
           # Extract only the MSDeploy profile
           awk 'BEGIN { RS="</publishProfile>"; ORS="" }/<publishProfile/ && /publishMethod="MSDeploy"/ {print $0"</publishProfile></publishData>\n"}' fullProfile.xml > publishProfile.xml
 
-      - name: Debug publish profile
-        run: |
-          cat publishProfile.xml
-
       - name: Read publish profile XML
         id: read_profile
         run: |
@@ -129,10 +125,6 @@ jobs:
           echo "profile<<EOF" >> $GITHUB_OUTPUT
           echo "$profile" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Debug publish profile output
-        run: |
-          echo "${{ steps.read_profile.outputs.profile }}"
 
       - name: Deploy App Service (${{ github.event.inputs.component }})
         uses: azure/webapps-deploy@v3
@@ -191,15 +183,15 @@ jobs:
           -X POST \
           -H "Accept: application/vnd.github+json" \
           /repos/${{ vars.REPO_OWNER }}${{ github.event.inputs.component }}/deployments \
-          -f ref=master \
-          -f environment=Production \
-          -f description="Deployed via CD pipeline" \
-          -f required_contexts=[] \
-          -f transient_environment=false \
-          -f production_environment=true \
-          -f state=success \
-          -f log_url="${{ steps.deploy-app-service.outputs.app-url }}" \
-          -f environment_url="${{ steps.deploy-app-service.outputs.app-url }}"
+          --raw-field ref=master \
+          --raw-field environment=Production \
+          --raw-field description="Deployed via CD pipeline" \
+          --raw-field required_contexts=[] \
+          --raw-field transient_environment=false \
+          --raw-field production_environment=true \
+          --raw-field state=success \
+          --raw-field log_url="${{ steps.deploy-app-service.outputs.app-url }}" \
+          --raw-field environment_url="${{ steps.deploy-app-service.outputs.app-url }}"
 
   deployment-summary:
     name: "📝 Output"
