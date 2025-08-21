@@ -178,7 +178,10 @@ jobs:
     name: "Post Deployment"
     needs:
       - setup-deployment
+      - deploy-app-service
+      - deploy-sql-database
     runs-on: ubuntu-latest
+    if: always() && (needs.deploy-app-service.result == 'success' || needs.deploy-sql-database.result == 'success')
     steps:
       - name: "Add Deployment to GitHub"
         run: |
