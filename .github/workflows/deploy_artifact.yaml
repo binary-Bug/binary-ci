@@ -120,12 +120,24 @@ jobs:
         run: |
           cat publishProfile.xml
 
+      - name: Read publish profile XML
+        id: read_profile
+        run: |
+          profile=$(<publishProfile.xml)
+          echo "profile<<EOF" >> $GITHUB_OUTPUT
+          echo "$profile" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Debug publish profile output
+        run: |
+          echo "${{ steps.read_profile.outputs.profile }}"
+
       - name: Deploy App Service (${{ github.event.inputs.component }})
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ github.event.inputs.component }}
           slot-name: "Production"
-          publish-profile: publishProfile.xml
+          publish-profile: ${{ steps.read_profile.outputs.profile }}
           package: ./artifact
 
   deploy-sql-database:
