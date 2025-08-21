@@ -112,6 +112,10 @@ jobs:
             --resource-group "${{ steps.find_rg.outputs.resource_group }}" \
             --xml > publishProfile.xml
 
+      - name: cat
+        run: |
+          cat publishProfile.xml
+
       - name: Deploy App Service (${{ github.event.inputs.component }})
         uses: azure/webapps-deploy@v3
         with:
