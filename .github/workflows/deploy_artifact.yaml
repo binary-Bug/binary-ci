@@ -127,6 +127,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Deploy App Service (${{ github.event.inputs.component }})
+        id: deploy
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ github.event.inputs.component }}
