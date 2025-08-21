@@ -81,6 +81,8 @@ jobs:
       - setup-deployment
     if: ${{ needs.setup-deployment.outputs.resource_type == 'Azure App service' }}
     runs-on: ubuntu-latest
+    outputs:
+      app-url: ${{ steps.deploy.outputs.webapp-url }}
     steps:
       - name: Download artifact from github storage
         uses: actions/download-artifact@v4
@@ -172,12 +174,35 @@ jobs:
           # Action we want it to do, in this case 'Publish' the contents of the dacpac to the database
           action: "publish"
 
+  post-deployment:
+    name: "Post Deployment"
+    needs:
+      - setup-deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Add Deployment to GitHub"
+        run: |
+          gh api \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          /repos/${{ vars.REPO_OWNER }}/${{ github.event.inputs.component }}/deployments \
+          -f ref=master \
+          -f environment=Production \
+          -f description="Deployed via CD pipeline" \
+          -f required_contexts=[] \
+          -f transient_environment=false \
+          -f production_environment=true \
+          -f state=success \
+          -f log_url="${{ steps.deploy-app-service.outputs.app-url }}" \
+          -f environment_url="${{ steps.deploy-app-service.outputs.app-url }}"
+
   deployment-summary:
     name: "📝 Output"
     needs:
       - setup-deployment
       - deploy-app-service
       - deploy-sql-database
+      - post-deployment
     runs-on: ubuntu-latest
     if: always() && (needs.deploy-app-service.result == 'success' || needs.deploy-sql-database.result == 'success')
     steps:
@@ -187,3 +212,6 @@ jobs:
           echo "- **Artifact Name:** ${{ needs.setup-deployment.outputs.artifact_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Workflow Run:** [View Run](https://github.com/${{ github.repository }}/actions/runs/${{ needs.setup-deployment.outputs.run_id }})" >> $GITHUB_STEP_SUMMARY
           echo "- **Run ID:** ${{ needs.setup-deployment.outputs.run_id }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.deploy-app-service.outputs.app-url }}" ]; then
+            echo "- **App URL:** ${{ steps.deploy-app-service.outputs.app-url }}" >> $GITHUB_STEP_SUMMARY
+          fi
