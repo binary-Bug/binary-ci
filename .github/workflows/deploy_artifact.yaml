@@ -20,7 +20,7 @@ on:
 
 jobs:
   setup-deployment:
-    name: 'Setup Deployment'
+    name: "Setup Deployment"
     runs-on: ubuntu-latest
     outputs:
       artifact_name: ${{ steps.find_artifact_and_run_id.outputs.artifact_name }}
@@ -37,9 +37,9 @@ jobs:
       - name: Set resource type
         id: set_resource_type
         run: |
-          if [[ "${{ github.event.inputs.component }}" == "piggy-ui" || "${{ github.event.inputs.component }}" == "piggy-api" ]]; then
+          if [[ "${{ github.event.inputs.component }}" == *ui* || "${{ github.event.inputs.component }}" == *api* ]]; then
             echo "resource_type=Azure App service" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.inputs.component }}" == "piggy-db" ]]; then
+          elif [[ "${{ github.event.inputs.component }}" == *db* ]]; then
             echo "resource_type=Azure SQL database" >> $GITHUB_OUTPUT
           else
             echo "resource_type=unknown" >> $GITHUB_OUTPUT
@@ -74,9 +74,9 @@ jobs:
           echo "The artifact to download is $ARTIFACT_NAME (run id: $RUN_ID)"
           echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
-  
+
   deploy-app-service:
-    name: 'Deploy App Service'
+    name: "Deploy App Service"
     needs:
       - setup-deployment
     if: ${{ needs.setup-deployment.outputs.resource_type == 'Azure App service' }}
@@ -89,7 +89,7 @@ jobs:
           path: ./artifact
           run-id: ${{ needs.setup-deployment.outputs.run_id }}
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - name: 'piggy-ui'
+      - name: "piggy-ui"
         id: deploy-piggy-ui
         if: ${{ github.event.inputs.component == 'piggy-ui' }}
         uses: azure/webapps-deploy@v3
@@ -98,7 +98,7 @@ jobs:
           slot-name: "Production"
           publish-profile: ${{ secrets.PIGGY_UI_AZURE_PUBLISH_PROFILE }}
           package: ./artifact
-      - name: 'piggy-api'
+      - name: "piggy-api"
         id: deploy-piggy-api
         if: ${{ github.event.inputs.component == 'piggy-api' }}
         uses: azure/webapps-deploy@v3
@@ -109,7 +109,7 @@ jobs:
           package: ./artifact
 
   deploy-sql-database:
-    name: 'Deploy SQL Database'
+    name: "Deploy SQL Database"
     needs:
       - setup-deployment
     if: ${{ needs.setup-deployment.outputs.resource_type == 'Azure SQL database' }}
@@ -128,20 +128,20 @@ jobs:
           unzip -o sqlpackage.zip -d sqlpackage
           chmod +x sqlpackage/sqlpackage
           echo "$PWD/sqlpackage" >> $GITHUB_PATH
-      - name: 'piggy-db'
+      - name: "piggy-db"
         id: deploy-piggy-db
         if: ${{ github.event.inputs.component == 'piggy-db' }}
         uses: Azure/sql-action@v2.3
         with:
           # The connection string, including authentication information, for the Azure SQL Database.
-          connection-string: '${{ secrets.PIGGY_SQL_CONNECTION_STRING }}'
+          connection-string: "${{ secrets.PIGGY_SQL_CONNECTION_STRING }}"
           # Path to the dacpac file in the artifact
-          path: './artifact/PIGGY_UI.dacpac'
+          path: "./artifact/PIGGY_UI.dacpac"
           # Action we want it to do, in this case 'Publish' the contents of the dacpac to the database
-          action: 'publish'
+          action: "publish"
 
   deployment-summary:
-    name: '📝 Output'
+    name: "📝 Output"
     needs:
       - setup-deployment
       - deploy-app-service
