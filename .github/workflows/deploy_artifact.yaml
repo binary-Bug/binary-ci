@@ -106,12 +106,12 @@ jobs:
           echo "resource_group=$RG" >> $GITHUB_OUTPUT
 
       - name: Fetch Publish Profile
+        shell: bash
         run: |
           az webapp deployment list-publishing-profiles \
             --name "${{ github.event.inputs.component }}" \
             --resource-group "${{ steps.find_rg.outputs.resource_group }}" \
-            --output none \
-            --file publishProfile.xml
+            --xml > publishProfile.xml
 
       - name: Debug publish profile
         run: |
