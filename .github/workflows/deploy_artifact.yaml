@@ -114,7 +114,7 @@ jobs:
             --xml > fullProfile.xml
 
           # Extract only the MSDeploy profile
-          awk '/<publishProfile .*publishMethod="MSDeploy"/,/<\/publishProfile>/' fullProfile.xml > publishProfile.xml
+          awk 'BEGIN { RS="</publishProfile>"; ORS="" }/<publishProfile/ && /publishMethod="MSDeploy"/ {print "<publishData>" $0 "</publishProfile></publishData>\n"}' fullProfile.xml > publishProfile.xml
 
       - name: Debug publish profile
         run: |
