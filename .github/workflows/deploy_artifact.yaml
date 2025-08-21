@@ -110,11 +110,14 @@ jobs:
           az webapp deployment list-publishing-profiles \
             --name "${{ github.event.inputs.component }}" \
             --resource-group "${{ steps.find_rg.outputs.resource_group }}" \
-            --xml > publishProfile.xml
+            --output none \
+            --file publishProfile.xml
 
-      - name: cat
+      - name: Debug publish profile
         run: |
-          cat publishProfile.xml
+          file publishProfile.xml
+          head -n 20 publishProfile.xml
+          grep -i kudu publishProfile.xml || echo "No kudu URL found"
 
       - name: Deploy App Service (${{ github.event.inputs.component }})
         uses: azure/webapps-deploy@v3
