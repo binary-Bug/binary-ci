@@ -193,7 +193,7 @@ jobs:
         run: terraform plan -var "resource_group_name=${{ inputs.rg_name }}" -var "name_prefix=${{ inputs.name_prefix }}" -out=tfplan
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var "resource_group_name=${{ inputs.rg_name }}" -var "name_prefix=${{ inputs.name_prefix }}" tfplan
+        run: terraform apply -auto-approve tfplan
 
   cleanup:
     runs-on: ubuntu-latest
