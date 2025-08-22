@@ -191,6 +191,7 @@ jobs:
     needs:
       - import
       - plan
+      - plan-summary
       - apply
     if: always() # ✅ runs even if any job fails
     steps:
