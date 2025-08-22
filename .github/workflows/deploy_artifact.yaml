@@ -77,6 +77,7 @@ jobs:
 
   deploy-app-service:
     name: "Deploy App Service"
+    environment: "cd-app-service"
     needs:
       - setup-deployment
     if: ${{ needs.setup-deployment.outputs.resource_type == 'Azure App service' }}
@@ -137,6 +138,7 @@ jobs:
 
   deploy-sql-database:
     name: "Deploy SQL Database"
+    environment: "cd-azure-database"
     needs:
       - setup-deployment
     if: ${{ needs.setup-deployment.outputs.resource_type == 'Azure SQL database' }}
