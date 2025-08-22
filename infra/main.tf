@@ -35,6 +35,7 @@ resource "azurerm_windows_web_app" "apps" {
 				dotnet_version     = each.value.current_stack == "dotnetcore" ? each.value.stack_version : null
 				node_version       = each.value.current_stack == "node"       ? each.value.stack_version : null
 			}
+      always_on = false
 		}
 
 		tags = {
