@@ -148,9 +148,13 @@ jobs:
 
           awk '/^Plan: [0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy\./ {print_flag=1}print_flag && !/\(known after apply\)/ {print}' infra/clean_plan.txt >> infra/summary.txt
 
-          sed -E 's/^Plan: ([0-9]+) to add, ([0-9]+) to change, ([0-9]+) to destroy\./### 🚀 **Plan**: \1 to add 🛠️, \2 to change 🔄, \3 to destroy 💣./; s/^Changes to Outputs:/### 🔧 Changes to Outputs:/; s/^  \+ ([a-zA-Z0-9_]+)\s+=\s+"(.*)"/- **\1**: `\2`/; s/^  \+ ([a-zA-Z0-9_]+)\s+=\s+\[$/- **\1**:/; s/^  \+ ([a-zA-Z0-9_]+)\s+=\s+\{/- **\1**:/; s/^    \+ ([a-zA-Z0-9_]+)\s+=\s+"(.*)"/  - **\1**: `\2`/; s/^    \+ ([a-zA-Z0-9_]+)\s+=\s+(.*)/  - **\1**: `\2`/; s/^      \+ ([a-zA-Z0-9_]+)\s+=\s+"(.*)"/  - **\1**: `\2`/; s/^      \+ ([a-zA-Z0-9_]+)\s+=\s+(.*)/  - **\1**: `\2`/; s/^    \+ "(.*)"/  - `\1`/; s/^      \+ \{//; s/^      \+ \}//; s/^\s*\{//; s/^\s*\}//; s/^\s*,\s*$//; s/^\s*\]$//' infra/summary.txt >> infra/formatted_summary.txt
+          sed -E 's/^Plan: ([0-9]+) to add, ([0-9]+) to change, ([0-9]+) to destroy\./### 🚀 **Plan**: \1 to add 🛠️, \2 to change 🔄, \3 to destroy 💣/; s/^Changes to Outputs:/### 🔧 Changes to Outputs:/; s/^  \+ ([a-zA-Z0-9_]+)\s+=\s+"(.*)"/- **\1**: `\2`/; s/^  \+ ([a-zA-Z0-9_]+)\s+=\s+\[$/- **\1**:/; s/^  \+ ([a-zA-Z0-9_]+)\s+=\s+\{/- **\1**:/; s/^    \+ ([a-zA-Z0-9_]+)\s+=\s+"(.*)"/  - **\1**: `\2`/; s/^    \+ ([a-zA-Z0-9_]+)\s+=\s+(.*)/  - **\1**: `\2`/; s/^      \+ ([a-zA-Z0-9_]+)\s+=\s+"(.*)"/  - **\1**: `\2`/; s/^      \+ ([a-zA-Z0-9_]+)\s+=\s+(.*)/  - **\1**: `\2`/; s/^    \+ "(.*)"/  - `\1`/; s/^      \+ \{//; s/^      \+ \}//; s/^\s*\{//; s/^\s*\}//; s/^\s*,\s*$//; s/^\s*\]$//' infra/summary.txt >> infra/formatted_summary.txt
 
-          sed -E 's/^[[:space:]]*\+ ([a-zA-Z0-9_]+) = "(.*)"/  - **\1**: `\2`/; s/^[[:space:]]*\+ ([a-zA-Z0-9_]+) = ([^"].*)/  - **\1**: `\2`/; s/^[[:space:]]*\+ ?\{.*//; s/^[[:space:]]*\+ ?\}.*//; /^$/d' infra/formatted_summary.txt >> $GITHUB_STEP_SUMMARY
+          sed -E 's/^[[:space:]]*\+ ([a-zA-Z0-9_]+) = "(.*)"/  - **\1**: `\2`/; s/^[[:space:]]*\+ ([a-zA-Z0-9_]+) = ([^"].*)/  - **\1**: `\2`/; s/^[[:space:]]*\+ ?\{.*//; s/^[[:space:]]*\+ ?\}.*//; /^$/d' infra/formatted_summary.txt >> infra/cleaned_summary.txt
+
+          sed '/^[─-]\{10,\}$/,/^$/d' infra/cleaned_summary.txt >> infra/final_summary.txt
+
+          cat infra/final_summary.txt >> $GITHUB_STEP_SUMMARY
 
   apply:
     name: "Terraform Apply"
