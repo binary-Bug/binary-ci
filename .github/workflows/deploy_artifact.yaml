@@ -164,8 +164,9 @@ jobs:
         id: build-dacpac-name
         run: |
           component="${{ github.event.inputs.component }}"
-          upper_name=$(echo "$component" | tr '[:lower:]' '[:upper:]' | sed 's/-/_/g')
-          echo "dacpac=${upper_name}.dacpac" >> $GITHUB_OUTPUT
+          # Replace '-db' with '_UI' and convert to uppercase
+          transformed=$(echo "$component" | sed 's/-db$/_UI/' | tr '[:lower:]' '[:upper:]')
+          echo "dacpac=${transformed}.dacpac" >> $GITHUB_OUTPUT
 
       - name: "Get SQL connection string"
         id: get-connection-string
