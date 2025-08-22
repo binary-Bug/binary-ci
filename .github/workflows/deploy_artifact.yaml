@@ -177,10 +177,9 @@ jobs:
           sql_server="${component%%-*}"
 
           # Build database name: replace '-db' with '_UI' and uppercase
-          database_name=$(echo "$component" | sed 's/-db$/_UI/' | tr '[:lower:]' '[:upper:]')
+          # database_name=$(echo "$component" | sed 's/-db$/_UI/' | tr '[:lower:]' '[:upper:]')
 
-          # Define resource group (can be dynamic if needed) not required in current context
-          # resource_group="your-resource-group"
+          database_name=$component
 
           # Get connection string using az CLI
           conn=$(az sql db show-connection-string \
