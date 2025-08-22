@@ -65,27 +65,6 @@ resource "azurerm_mssql_firewall_rule" "allow_all" {
   end_ip_address      = "255.255.255.255"
 }
 
-# resource "azurerm_mssql_database" "main" {
-#   name                = "${var.name_prefix}-db"
-#   server_id           = azurerm_mssql_server.main.id
-#   collation           = "SQL_Latin1_General_CP1_CI_AS"
-#   max_size_gb         = 32
-#   zone_redundant      = false
-
-#   sku_name            = "GP_S_Gen5_2"  # General Purpose, Serverless, Gen5, 2 vCores
-#   min_capacity        = 0.5            # Optional: lower bound for serverless scaling
-#   auto_pause_delay_in_minutes = 60     # Optional: auto-pause after inactivity
-
-#   storage_account_type = "Local"       # Locally-redundant backup storage
-
-#   # PITR retention
-#   short_term_retention_policy {
-#     retention_days = 7
-#   }
-
-#   # Public access enabled by default; firewall rules can be added separately
-#}
-
 resource "azapi_resource" "sql_database" {
   type      = "Microsoft.Sql/servers/databases@2024-11-01-preview"
   name      = "${var.name_prefix}-db"

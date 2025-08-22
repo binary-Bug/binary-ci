@@ -54,6 +54,5 @@ output "sql_database_details" {
     min_capacity               = local.sql_db_output.properties.minCapacity
     backup_storage_redundancy = local.sql_db_output.properties.requestedBackupStorageRedundancy
     zone_redundant             = local.sql_db_output.properties.zoneRedundant
-    short_term_retention_days = local.sql_db_output.properties.shortTermRetentionPolicy.retentionDays
   }
 }
