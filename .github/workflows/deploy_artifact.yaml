@@ -174,7 +174,7 @@ jobs:
           component="${{ github.event.inputs.component }}"
 
           # Extract server name: everything before the first '-'
-          sql_server="${component%%-*}.database.windows.net"
+          sql_server="${component%%-*}"
 
           # Build database name: replace '-db' with '_UI' and uppercase
           database_name=$(echo "$component" | sed 's/-db$/_UI/' | tr '[:lower:]' '[:upper:]')
