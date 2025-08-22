@@ -143,6 +143,9 @@ jobs:
       - setup-deployment
     if: ${{ needs.setup-deployment.outputs.resource_type == 'Azure SQL database' }}
     runs-on: ubuntu-latest
+    #outputs:
+    #server:
+    #database:
     steps:
       - name: Download artifact from github storage
         uses: actions/download-artifact@v5
@@ -151,22 +154,47 @@ jobs:
           path: ./artifact
           run-id: ${{ needs.setup-deployment.outputs.run_id }}
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZ_CREDS }}
+
+      - name: "Build DACPAC filename"
+        id: build-dacpac-name
+        run: |
+          component="${{ github.event.inputs.component }}"
+          upper_name=$(echo "$component" | tr '[:lower:]' '[:upper:]' | sed 's/-/_/g')
+          echo "dacpac=${upper_name}.dacpac" >> $GITHUB_OUTPUT
+
+      - name: "Get SQL connection string"
+        id: get-connection-string
+        run: |
+          resource_group="your-resource-group"
+          sql_server="your-sql-server-name"
+          database_name="your-database-name"
+
+          conn=$(az sql db show-connection-string \
+            --client ado.net \
+            --name "$database_name" \
+            --server "$sql_server.database.windows.net" \
+            --output tsv)
+
+          echo "sql-connection=$conn" >> $GITHUB_OUTPUT
+
       - name: Install sqlpackage and add to PATH
         run: |
           wget -O sqlpackage.zip https://aka.ms/sqlpackage-linux
           unzip -o sqlpackage.zip -d sqlpackage
           chmod +x sqlpackage/sqlpackage
           echo "$PWD/sqlpackage" >> $GITHUB_PATH
-      - name: "piggy-db"
-        id: deploy-piggy-db
-        if: ${{ github.event.inputs.component == 'piggy-db' }}
+
+      - name: "Deploy SQL DACPAC (${{ github.event.inputs.component }})"
+        id: deploy-sql-database
         uses: Azure/sql-action@v2.3
         with:
-          # The connection string, including authentication information, for the Azure SQL Database.
-          connection-string: "${{ secrets.PIGGY_SQL_CONNECTION_STRING }}"
-          # Path to the dacpac file in the artifact
-          path: "./artifact/PIGGY_UI.dacpac"
-          # Action we want it to do, in this case 'Publish' the contents of the dacpac to the database
+          connection-string: ${{ steps.get-connection-string.outputs.sql-connection }}
+          path: "./artifact/${{ steps.build-dacpac-name.outputs.dacpac }}"
           action: "publish"
 
   post-deployment:
