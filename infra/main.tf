@@ -86,7 +86,7 @@ resource "azurerm_mssql_firewall_rule" "allow_all" {
 #}
 
 resource "azapi_resource" "sql_database" {
-  type      = "Microsoft.Sql/servers/databases@2023-08-01"
+  type      = "Microsoft.Sql/servers/databases@2024-11-01-preview"
   name      = "${var.name_prefix}-db"
   location  = azurerm_resource_group.main.location
   parent_id = azurerm_mssql_server.main.id
