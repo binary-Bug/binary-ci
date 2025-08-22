@@ -1,21 +1,21 @@
-name: 'SQL Dacpac Build Action'
-description: 'Reusable action for building SQL db components.'
+name: "SQL Dacpac Build Action"
+description: "Reusable action for building SQL db components."
 inputs:
   repo_name:
-    description: 'Full repository name (owner/repo)'
+    description: "Full repository name (owner/repo)"
     required: true
   version:
-    description: 'Version string (e.g., v1.2.3)'
+    description: "Version string (e.g., v1.2.3)"
     required: true
   component:
-    description: 'Component name (e.g., piggy-ui)'
+    description: "Component name (e.g., piggy-ui)"
     required: true
   personal_access_token:
-    description: 'GitHub Personal Access Token'
+    description: "GitHub Personal Access Token"
     required: true
 outputs:
   VERSION:
-    description: 'The calculated version'
+    description: "The calculated version"
     value: ${{ inputs.version }}
 runs:
   using: "composite"
@@ -48,9 +48,9 @@ runs:
       shell: pwsh
     # Publish artifact
     - name: Upload Artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.component }}-${{ inputs.version }}
-        path: ${{ github.workspace }}/bin/Release/ 
-    - name: Checkout Repository 
+        path: ${{ github.workspace }}/bin/Release/
+    - name: Checkout Repository
       uses: actions/checkout@v4

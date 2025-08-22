@@ -1,21 +1,21 @@
-name: 'Dotnet Build Action'
-description: 'Reusable action for building .NET components.'
+name: "Dotnet Build Action"
+description: "Reusable action for building .NET components."
 inputs:
   repo_name:
-    description: 'Full repository name (owner/repo)'
+    description: "Full repository name (owner/repo)"
     required: true
   version:
-    description: 'Version string (e.g., v1.2.3)'
+    description: "Version string (e.g., v1.2.3)"
     required: true
   component:
-    description: 'Component name (e.g., piggy-ui)'
+    description: "Component name (e.g., piggy-ui)"
     required: true
   personal_access_token:
-    description: 'GitHub Personal Access Token'
+    description: "GitHub Personal Access Token"
     required: true
 outputs:
   VERSION:
-    description: 'The calculated version'
+    description: "The calculated version"
     value: ${{ inputs.version }}
 runs:
   using: "composite"
@@ -29,7 +29,7 @@ runs:
     - name: Set up .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.x'
+        dotnet-version: "8.x"
     - name: Build .NET App
       run: dotnet build --configuration Release
       shell: bash
@@ -37,7 +37,7 @@ runs:
       run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
       shell: bash
     - name: Upload Artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.component }}-${{ inputs.version }}
         path: ${{env.DOTNET_ROOT}}/myapp
