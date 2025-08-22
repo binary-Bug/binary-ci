@@ -95,7 +95,7 @@ resource "azapi_resource" "sql_database" {
     created_by = "terraform"
   }
 
-  body = {
+  body = jsonencode({
     sku = {
       name     = "GP_S_Gen5"
       tier     = "GeneralPurpose"
@@ -120,7 +120,7 @@ resource "azapi_resource" "sql_database" {
         retentionDays = 7
       }
     }
-  }
+  })
 
   schema_validation_enabled = false
   response_export_values    = ["*"]
