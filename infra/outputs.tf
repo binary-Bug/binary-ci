@@ -27,3 +27,29 @@ output "app_service_ids" {
 	description = "Resource IDs of all App Services"
 	value       = [for app in azurerm_windows_web_app.apps : app.id]
 }
+
+output "sql_server_name" {
+  description = "Name of the Azure SQL Server"
+  value       = azurerm_mssql_server.main.name
+}
+
+output "sql_server_fqdn" {
+  description = "Fully qualified domain name (FQDN) of the SQL Server"
+  value       = azurerm_mssql_server.main.fully_qualified_domain_name
+}
+
+output "sql_database_name" {
+  description = "Name of the Azure SQL Database"
+  value       = azurerm_mssql_database.main.name
+}
+
+output "sql_admin_username" {
+  description = "SQL Server administrator username"
+  value       = azurerm_mssql_server.main.administrator_login
+  sensitive   = false
+}
+
+output "sql_firewall_rule_name" {
+  description = "Name of the firewall rule applied to the SQL Server"
+  value       = azurerm_mssql_firewall_rule.allow_all.name
+}
