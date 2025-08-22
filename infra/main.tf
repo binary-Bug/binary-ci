@@ -2,6 +2,10 @@
 resource "azurerm_resource_group" "main" {
 	name     = var.resource_group_name
 	location = var.location
+
+	tags = {
+		created_by = "terraform"
+	}
 }
 
 # Create a shared App Service Plan for all app services
@@ -11,6 +15,10 @@ resource "azurerm_service_plan" "main" {
 	resource_group_name = azurerm_resource_group.main.name
 	os_type             = "Windows"
 	sku_name            = "F1"
+
+	tags = {
+		created_by = "terraform"
+	}
 }
 
 # Create multiple App Services using the app_services variable
@@ -28,6 +36,10 @@ resource "azurerm_windows_web_app" "apps" {
 				node_version       = each.value.current_stack == "node"       ? each.value.stack_version : null
 			}
 		}
+
+		tags = {
+			created_by = "terraform"
+		}
 }
 
 resource "azurerm_mssql_server" "main" {
@@ -39,27 +51,10 @@ resource "azurerm_mssql_server" "main" {
   administrator_login_password = var.sql_admin_password
 
   minimum_tls_version = "1.2"
-}
 
-resource "azurerm_mssql_database" "main" {
-  name                = "${var.name_prefix}-db"
-  server_id           = azurerm_mssql_server.main.id
-  collation           = "SQL_Latin1_General_CP1_CI_AS"
-  max_size_gb         = 32
-  zone_redundant      = false
-
-  sku_name            = "GP_S_Gen5_2"  # General Purpose, Serverless, Gen5, 2 vCores
-  min_capacity        = 0.5            # Optional: lower bound for serverless scaling
-  auto_pause_delay_in_minutes = 60     # Optional: auto-pause after inactivity
-
-  storage_account_type = "Local"       # Locally-redundant backup storage
-
-  # PITR retention
-  short_term_retention_policy {
-    retention_days = 7
+  tags = {
+    created_by = "terraform"
   }
-
-  # Public access enabled by default; firewall rules can be added separately
 }
 
 resource "azurerm_mssql_firewall_rule" "allow_all" {
@@ -67,4 +62,66 @@ resource "azurerm_mssql_firewall_rule" "allow_all" {
   server_id           = azurerm_mssql_server.main.id
   start_ip_address    = "0.0.0.0"
   end_ip_address      = "255.255.255.255"
+}
+
+# resource "azurerm_mssql_database" "main" {
+#   name                = "${var.name_prefix}-db"
+#   server_id           = azurerm_mssql_server.main.id
+#   collation           = "SQL_Latin1_General_CP1_CI_AS"
+#   max_size_gb         = 32
+#   zone_redundant      = false
+
+#   sku_name            = "GP_S_Gen5_2"  # General Purpose, Serverless, Gen5, 2 vCores
+#   min_capacity        = 0.5            # Optional: lower bound for serverless scaling
+#   auto_pause_delay_in_minutes = 60     # Optional: auto-pause after inactivity
+
+#   storage_account_type = "Local"       # Locally-redundant backup storage
+
+#   # PITR retention
+#   short_term_retention_policy {
+#     retention_days = 7
+#   }
+
+#   # Public access enabled by default; firewall rules can be added separately
+#}
+
+resource "azapi_resource" "sql_database" {
+  type      = "Microsoft.Sql/servers/databases@2023-08-01"
+  name      = "${var.name_prefix}-db"
+  location  = azurerm_resource_group.main.location
+  parent_id = azurerm_mssql_server.main.id
+
+  tags = {
+    created_by = "terraform"
+  }
+
+  body = {
+    sku = {
+      name     = "GP_S_Gen5"
+      tier     = "GeneralPurpose"
+      family   = "Gen5"
+      capacity = 2
+    }
+
+    properties = {
+      collation                        = "SQL_Latin1_General_CP1_CI_AS"
+      maxSizeBytes                     = 34359738368                     # 32 GB
+      zoneRedundant                    = false
+      minCapacity                      = 0.5
+      autoPauseDelay                   = 60
+      requestedBackupStorageRedundancy = "Local"
+      useFreeLimit                     = true
+      freeLimitExhaustionBehavior      = "Pause"
+      readScale                        = "Disabled"
+      createMode                       = "Default"
+      isLedgerOn                       = false
+
+      shortTermRetentionPolicy = {
+        retentionDays = 7
+      }
+    }
+  }
+
+  schema_validation_enabled = false
+  response_export_values    = ["*"]
 }
