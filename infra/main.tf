@@ -112,7 +112,7 @@ resource "azapi_resource" "sql_database" {
       autoPauseDelay                   = 60
       requestedBackupStorageRedundancy = "Local"
       useFreeLimit                     = true
-      freeLimitExhaustionBehavior      = "Pause"
+      freeLimitExhaustionBehavior      = "AutoPause"
       readScale                        = "Disabled"
       createMode                       = "Default"
       isLedgerOn                       = false
