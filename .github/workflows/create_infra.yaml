@@ -204,8 +204,8 @@ jobs:
       - name: Terraform Apply Summary
         run: |
           echo "### ✅ Terraform Apply was successful! 🚀" >> $GITHUB_STEP_SUMMARY
-          echo "- **Resource Group**: `${{ inputs.rg_name }}`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Prefix Used**: `${{ inputs.name_prefix }}`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Resource Group**: '${{ inputs.rg_name }}'" >> $GITHUB_STEP_SUMMARY
+          echo "- **Prefix Used**: '${{ inputs.name_prefix }}'" >> $GITHUB_STEP_SUMMARY
 
   cleanup:
     runs-on: ubuntu-latest
