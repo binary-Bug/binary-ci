@@ -170,6 +170,8 @@ jobs:
 
       - name: "Get SQL connection string"
         id: get-connection-string
+        env:
+          GH_SECRET_AZURE_DB_PASSWORD: ${{ secrets.AZURE_DB_PASSWORD }}
         run: |
           component="${{ github.event.inputs.component }}"
 
@@ -188,8 +190,12 @@ jobs:
             --server "$sql_server" \
             --output tsv)
 
-          echo "sql-connection=$conn" >> $GITHUB_OUTPUT
-          echo "$conn"
+          conn_updated=$(echo "$conn" | sed -E \
+          -e "s/User ID=[^;]+;\*\*\*/User ID=sqladminuser;Password=$GH_SECRET_AZURE_DB_PASSWORD/" \
+          -e "s/Connection Timeout=30/Connection Timeout=90/")
+
+          echo "sql-connection=$conn_updated" >> $GITHUB_OUTPUT
+          echo "$conn_updated"
 
       - name: Install sqlpackage and add to PATH
         run: |
