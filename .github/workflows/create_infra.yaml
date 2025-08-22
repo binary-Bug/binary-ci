@@ -121,7 +121,9 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        run: terraform plan -var "resource_group_name=${{ inputs.rg_name }}" -var "name_prefix=${{ inputs.name_prefix }}" | tee plan.txt
+        run: |
+          terraform plan -var "resource_group_name=${{ inputs.rg_name }}" -var "name_prefix=${{ inputs.name_prefix }}" | tee plan.txt
+          exit ${PIPESTATUS[0]}
 
       - name: Upload Terraform Plan Output
         uses: actions/upload-artifact@v4
