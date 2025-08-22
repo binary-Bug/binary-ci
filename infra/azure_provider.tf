@@ -14,6 +14,8 @@ provider "azurerm" {
 	# by the GitHub Action using azure/login. No need to set them here for CI/CD.
 }
 
+provider "azapi" {}
+
 # In CI/CD, set the following environment variables:
 # ARM_SUBSCRIPTION_ID, ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_TENANT_ID
 # These can be set in your workflow using secrets or environment variables.
