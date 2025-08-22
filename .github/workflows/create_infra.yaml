@@ -156,7 +156,7 @@ jobs:
 
           sed '/^[─-]\{10,\}$/,/^$/d' infra/cleaned_summary.txt >> infra/final_summary.txt
 
-          sed -i "s/- \*\*sql_database_details\*\*:/- **sql_database_name**: `${{ inputs.name_prefix }}-db`/" infra/final_summary.txt
+          sed -i "s/- \*\*sql_database_details\*\*:/- **sql_database_name**: \\\`${{ inputs.name_prefix }}-db\\\`/" infra/final_summary.txt
 
           cat infra/final_summary.txt >> $GITHUB_STEP_SUMMARY
 
