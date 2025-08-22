@@ -36,26 +36,24 @@ output "sql_firewall_rule_name" {
   value       = azurerm_mssql_firewall_rule.allow_all.name
 }
 
-# output "sql_database_name" {
-#   description = "Name of the Azure SQL Database"
-#   value       = azurerm_mssql_database.main.name
-# }
+locals {
+  sql_db_output = jsondecode(azapi_resource.sql_database.output)
+}
 
 output "sql_database_details" {
-  description = "Consolidated details of the Azure SQL Database created via azapi"
   value = {
-    id                           = azapi_resource.sql_database.output["id"]
-    name                         = azapi_resource.sql_database.output["name"]
-    location                     = azapi_resource.sql_database.output["location"]
-    sku_name                     = azapi_resource.sql_database.output["sku"]["name"]
-    free_limit_enabled           = azapi_resource.sql_database.output["properties"]["useFreeLimit"]
-    free_limit_behavior          = azapi_resource.sql_database.output["properties"]["freeLimitExhaustionBehavior"]
-    max_size_gb                  = azapi_resource.sql_database.output["properties"]["maxSizeBytes"] / 1073741824
-    collation                    = azapi_resource.sql_database.output["properties"]["collation"]
-    auto_pause_delay_minutes     = azapi_resource.sql_database.output["properties"]["autoPauseDelay"]
-    min_capacity                 = azapi_resource.sql_database.output["properties"]["minCapacity"]
-    backup_storage_redundancy   = azapi_resource.sql_database.output["properties"]["requestedBackupStorageRedundancy"]
-    zone_redundant               = azapi_resource.sql_database.output["properties"]["zoneRedundant"]
-    short_term_retention_days   = azapi_resource.sql_database.output["properties"]["shortTermRetentionPolicy"]["retentionDays"]
+    id                         = local.sql_db_output.id
+    name                       = local.sql_db_output.name
+    location                   = local.sql_db_output.location
+    sku_name                   = local.sql_db_output.sku.name
+    free_limit_enabled         = local.sql_db_output.properties.useFreeLimit
+    free_limit_behavior        = local.sql_db_output.properties.freeLimitExhaustionBehavior
+    max_size_gb                = local.sql_db_output.properties.maxSizeBytes / 1073741824
+    collation                  = local.sql_db_output.properties.collation
+    auto_pause_delay_minutes   = local.sql_db_output.properties.autoPauseDelay
+    min_capacity               = local.sql_db_output.properties.minCapacity
+    backup_storage_redundancy = local.sql_db_output.properties.requestedBackupStorageRedundancy
+    zone_redundant             = local.sql_db_output.properties.zoneRedundant
+    short_term_retention_days = local.sql_db_output.properties.shortTermRetentionPolicy.retentionDays
   }
 }
