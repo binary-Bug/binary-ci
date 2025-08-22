@@ -31,3 +31,14 @@ variable "app_services" {
   }))
   default = []
 }
+
+variable "sql_admin_username" {
+  description = "Administrator username for the Azure SQL Server"
+  type        = string
+}
+
+variable "sql_admin_password" {
+  description = "Administrator password for the Azure SQL Server"
+  type        = string
+  sensitive   = true
+}

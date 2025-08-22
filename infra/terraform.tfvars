@@ -27,3 +27,6 @@ app_services = [
 		stack_version = "~20"
 	}
 ]
+
+sql_admin_username = "sqladminuser"
+sql_admin_password = "SuperSecurePassword123!"
