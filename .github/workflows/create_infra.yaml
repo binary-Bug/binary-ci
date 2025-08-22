@@ -129,27 +129,27 @@ jobs:
           name: plan-output
           path: infra/plan.txt
 
-  plan-summary:
-    name: "Terraform Plan Output"
-    runs-on: ubuntu-latest
-    needs: plan
-    steps:
-      - name: Download Terraform Plan Output
-        uses: actions/download-artifact@v4
-        with:
-          name: plan-output
-          path: infra
+  # plan-summary:
+  #   name: "Terraform Plan Output"
+  #   runs-on: ubuntu-latest
+  #   needs: plan
+  #   steps:
+  #     - name: Download Terraform Plan Output
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: plan-output
+  #         path: infra
 
-      - name: Add Terraform Plan to Job Summary
-        run: |
-          perl -pe 's/\e\[[0-9;]*[mK]//g' infra/plan.txt > infra/clean_plan.txt
-          echo '' >> $GITHUB_STEP_SUMMARY
-          awk 'BEGIN{print;} /^Plan:/ {print; print "\nChanges to Outputs:\n\napp_service_names:"} /app_service_names *= *\[/ {in_block=1; next} in_block && /\]/ {in_block=0; next} in_block && /"/ {gsub(/[" ,+]/,"",$0); print "  - " $0} /app_service_plan_name *= / {print "\napp_service_plan_name:"; gsub(/[" ,+]/,"",$NF); print "  - " $NF} /new_resource_group_name *= / {print "\nnew_resource_group_name:"; gsub(/[" ,+]/,"",$NF); print "  - " $NF}' infra/clean_plan.txt >> $GITHUB_STEP_SUMMARY
+  #     - name: Add Terraform Plan to Job Summary
+  #       run: |
+  #         perl -pe 's/\e\[[0-9;]*[mK]//g' infra/plan.txt > infra/clean_plan.txt
+  #         echo '' >> $GITHUB_STEP_SUMMARY
+  #         awk 'BEGIN{print;} /^Plan:/ {print; print "\nChanges to Outputs:\n\napp_service_names:"} /app_service_names *= *\[/ {in_block=1; next} in_block && /\]/ {in_block=0; next} in_block && /"/ {gsub(/[" ,+]/,"",$0); print "  - " $0} /app_service_plan_name *= / {print "\napp_service_plan_name:"; gsub(/[" ,+]/,"",$NF); print "  - " $NF} /new_resource_group_name *= / {print "\nnew_resource_group_name:"; gsub(/[" ,+]/,"",$NF); print "  - " $NF}' infra/clean_plan.txt >> $GITHUB_STEP_SUMMARY
 
   apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
-    needs: plan-summary
+    needs: plan
     if: ${{ always() && github.event.inputs.run_apply == 'true' }}
     defaults:
       run:
@@ -190,7 +190,6 @@ jobs:
     needs:
       - import
       - plan
-      - plan-summary
       - apply
     if: always() # ✅ runs even if any job fails
     steps:
