@@ -67,12 +67,17 @@ jobs:
         id: fetch_vars
         run: |
           for V in MAJOR MINOR PATCH; do
+            echo "Fetching $V..."
             VAL=$(gh variable get "$V" --repo "${{ steps.compose_repo.outputs.repo_name }}" 2>/dev/null)
+            echo "Current VAL for $V is = $VAL"
             if [ -z "$VAL" ]; then
+              echo "$V not set, initializing to 0"
               VAL=0
+              echo "VAL set to 0"
               gh variable set "$V" --body "$VAL" --repo "${{ steps.compose_repo.outputs.repo_name }}"
               echo "Created $V=$VAL in repo"
             fi
+            echo "Setting $V=$VAL in environment"
             echo "$V=$VAL" >> $GITHUB_ENV
           done
         env:
