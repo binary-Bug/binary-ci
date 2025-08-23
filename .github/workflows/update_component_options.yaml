@@ -51,17 +51,28 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/binary-Bug/binary-devops.git
 
           if [[ "${{ github.event.inputs.commit_to_master }}" == "true" ]]; then
+            echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
+            gh auth setup-git
+            git config user.name "binary-Bug"
+            git config user.email "punitbantia@gmail.com"
+            git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/binary-Bug/binary-devops.git
             git add .github/workflows/*.yaml
             git commit -m "$COMMIT_MSG"
             git push origin master
             echo "✅ Changes committed directly to master."
           else
+            echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
+            gh auth setup-git
+            git config user.name "binary-Bug"
+            git config user.email "punitbantia@gmail.com"
+            git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/binary-Bug/binary-devops.git
             git checkout -b "$BRANCH_NAME"
             git add .github/workflows/*.yaml
             git commit -m "$COMMIT_MSG"
             git push origin "$BRANCH_NAME"
 
             # Create PR using GitHub CLI
+            echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
             gh auth setup-git
             gh pr create \
               --title "$COMMIT_MSG" \
