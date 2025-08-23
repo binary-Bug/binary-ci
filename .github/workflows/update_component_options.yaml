@@ -33,8 +33,9 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
+          git config user.name "binary-Bug"
+          git config user.email "punitbantia@gmail.com"
 
       - name: Commit or Create PR
         env:
