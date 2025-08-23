@@ -32,15 +32,13 @@ jobs:
             done
           done
 
-      - name: Configure Git
-        run: |
-          echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
-          git config user.name "binary-Bug"
-          git config user.email "punitbantia@gmail.com"
+      # - name: Configure Git
+      #   run: |
+      #     echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
+      #     git config user.name "binary-Bug"
+      #     git config user.email "punitbantia@gmail.com"
 
       - name: Commit or Create PR
-        env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           BRANCH_NAME="update-component"
           COMPONENTS="${{ github.event.inputs.new_components }}"
