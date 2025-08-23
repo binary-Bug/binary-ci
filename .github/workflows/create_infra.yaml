@@ -207,10 +207,27 @@ jobs:
           echo "- **Resource Group**: '${{ inputs.rg_name }}'" >> $GITHUB_STEP_SUMMARY
           echo "- **Prefix Used**: '${{ inputs.name_prefix }}'" >> $GITHUB_STEP_SUMMARY
 
+  update-workflow-options:
+    name: "Update Workflow Options"
+    needs:
+      - apply
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Update Workflow Options
+        run: |
+          gh workflow run update_component_options.yaml \
+            --ref master \
+            --field new_components="${{ inputs.name_prefix }}-ui,${{ inputs.name_prefix }}-api,${{ inputs.name_prefix }}-db" \
+            --field commit_to_master="true"
+
   trigger-build-artifact:
     name: "Trigger Build Artifact Workflow"
     needs:
       - apply
+      - update-workflow-options
     runs-on: ubuntu-latest
     strategy:
       matrix:
