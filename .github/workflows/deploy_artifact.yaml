@@ -12,6 +12,9 @@ on:
           - piggy-ui
           - piggy-api
           - piggy-db
+          - eat-ui
+          - eat-api
+          - eat-db
       version:
         description: "Version to deploy (e.g., 0.8.17 or 'latest')"
         required: true
