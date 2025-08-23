@@ -68,7 +68,9 @@ jobs:
         run: |
           for V in MAJOR MINOR PATCH; do
             echo "Fetching $V..."
-            VAL=$(gh variable get "$V" --repo "${{ steps.compose_repo.outputs.repo_name }}" 2>/dev/null)
+            if ! VAL=$(gh variable get "$V" --repo "${{ steps.compose_repo.outputs.repo_name }}" 2>/dev/null); then
+              VAL=""
+            fi
             echo "Current VAL for $V is = $VAL"
             if [ -z "$VAL" ]; then
               echo "$V not set, initializing to 0"
