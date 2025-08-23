@@ -48,6 +48,7 @@ jobs:
           gh auth setup-git
           git config user.name "binary-Bug"
           git config user.email "punitbantia@gmail.com"
+          git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/binary-Bug/binary-devops.git
 
           if [[ "${{ github.event.inputs.commit_to_master }}" == "true" ]]; then
             git add .github/workflows/*.yaml
