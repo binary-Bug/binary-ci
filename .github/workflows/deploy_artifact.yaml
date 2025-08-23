@@ -275,3 +275,12 @@ jobs:
           if [ -n "${{ needs.deploy-app-service.outputs.app-url }}" ]; then
             echo "- **App URL:** ${{ needs.deploy-app-service.outputs.app-url }}" >> $GITHUB_STEP_SUMMARY
           fi
+          if [ "${{ needs.setup-deployment.outputs.resource_type }}" = "Azure SQL database" ]; then
+            component="${{ github.event.inputs.component }}"
+            
+            # Extract server name: everything before the first '-'
+            sql_server="${component%%-*}"
+
+            echo "- **Database:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **SQL Server:** $sql_server.database.windows.net" >> $GITHUB_STEP_SUMMARY
+          fi
