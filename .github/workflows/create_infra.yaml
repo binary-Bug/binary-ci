@@ -217,6 +217,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Update Workflow Options
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           gh workflow run update_component_options.yaml \
             --ref master \
