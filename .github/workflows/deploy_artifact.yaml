@@ -9,6 +9,9 @@ on:
         required: true
         type: choice
         options:
+        - test-db
+        - test-api
+        - test-ui
           - piggy-ui
           - piggy-api
           - piggy-db
