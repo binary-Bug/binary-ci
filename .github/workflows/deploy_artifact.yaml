@@ -12,9 +12,6 @@ on:
           - piggy-ui
           - piggy-api
           - piggy-db
-          - eat-ui
-          - eat-api
-          - eat-db
       version:
         description: "Version to deploy (e.g., 0.8.17 or 'latest')"
         required: true
@@ -280,7 +277,7 @@ jobs:
           fi
           if [ "${{ needs.setup-deployment.outputs.resource_type }}" = "Azure SQL database" ]; then
             component="${{ github.event.inputs.component }}"
-            
+
             # Extract server name: everything before the first '-'
             sql_server="${component%%-*}"
 

@@ -12,9 +12,6 @@ on:
           - piggy-ui
           - piggy-api
           - piggy-db
-          - eat-ui
-          - eat-api
-          - eat-db
       component_type:
         description: "Select component type"
         required: true
@@ -76,7 +73,7 @@ jobs:
             echo "$V=$VAL" >> $GITHUB_ENV
           done
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         shell: bash
       - name: Calculate New Version
         id: versioning
