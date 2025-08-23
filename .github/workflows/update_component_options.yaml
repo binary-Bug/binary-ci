@@ -31,11 +31,42 @@ jobs:
           files=".github/workflows/build_artifact.yaml .github/workflows/deploy_artifact.yaml"
           IFS=',' read -ra components <<< "${{ github.event.inputs.new_components }}"
           for file in $files; do
-            for comp in "${components[@]}"; do
-              if ! grep -q "^\s*- ${comp// /}" "$file"; then
-                sed -i "/options:/a\ \ \ \ \ \ \ \ - ${comp// /}" "$file"
-              fi
-            done
+            awk -v comps="${components[*]}" '
+              BEGIN {
+                split(comps, arr, " ");
+                in_options = 0;
+                inserted = 0;
+              }
+              {
+                # Detect the first options block
+                if (!inserted && $0 ~ /^[[:space:]]*options:/) {
+                  print $0;
+                  in_options = 1;
+                  next;
+                }
+
+                # While inside the first options block, collect existing entries
+                if (in_options && $0 ~ /^[[:space:]]*- /) {
+                  existing[$1 $2] = 1;
+                  print $0;
+                  next;
+                }
+
+                # If options block ends, insert missing components
+                if (in_options && $0 !~ /^[[:space:]]*- /) {
+                  for (i in arr) {
+                    key = "- " arr[i];
+                    if (!(key in existing)) {
+                      printf "          - %s\n", arr[i];
+                    }
+                  }
+                  inserted = 1;
+                  in_options = 0;
+                }
+
+                print $0;
+              }
+            ' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
           done
 
       # - name: Configure Git
