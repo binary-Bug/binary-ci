@@ -12,6 +12,9 @@ on:
           - piggy-ui
           - piggy-api
           - piggy-db
+          - test-ui
+          - test-api
+          - test-db
       component_type:
         description: "Select component type"
         required: true

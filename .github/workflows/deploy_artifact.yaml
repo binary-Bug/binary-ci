@@ -12,6 +12,9 @@ on:
           - piggy-ui
           - piggy-api
           - piggy-db
+          - test-ui
+          - test-api
+          - test-db
       version:
         description: "Version to deploy (e.g., 0.8.17 or 'latest')"
         required: true
