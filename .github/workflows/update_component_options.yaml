@@ -1,4 +1,5 @@
 name: 🔄 Update Workflow Options
+run-name: "Update Workflow Options"
 
 on:
   workflow_dispatch:
@@ -44,6 +45,11 @@ jobs:
           BRANCH_NAME="update-component"
           COMPONENTS="${{ github.event.inputs.new_components }}"
           COMMIT_MSG="Add components [$COMPONENTS] to workflow options"
+
+          echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
+          gh auth setup-git
+          git config user.name "binary-Bug"
+          git config user.email "punitbantia@gmail.com"
 
           if [[ "${{ github.event.inputs.commit_to_master }}" == "true" ]]; then
             git add .github/workflows/*.yaml
