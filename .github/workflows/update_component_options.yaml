@@ -47,35 +47,35 @@ jobs:
           COMPONENTS="${{ github.event.inputs.new_components }}"
           COMMIT_MSG="Add components [$COMPONENTS] to workflow options"
 
-          echo "${{ secrets.ALL_ACCESS_PAT_CLASSIC_TOKEN }}" | gh auth login --with-token
+          echo "${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}" | gh auth login --with-token
           gh auth setup-git
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.ALL_ACCESS_PAT_CLASSIC_TOKEN }}@github.com/binary-Bug/binary-devops.git
+          git remote set-url origin https://x-access-token:${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}@github.com/binary-Bug/binary-devops.git
 
           if [[ "${{ github.event.inputs.commit_to_master }}" == "true" ]]; then
-            echo "${{ secrets.ALL_ACCESS_PAT_CLASSIC_TOKEN }}" | gh auth login --with-token
+            echo "${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}" | gh auth login --with-token
             gh auth setup-git
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git remote set-url origin https://x-access-token:${{ secrets.ALL_ACCESS_PAT_CLASSIC_TOKEN }}@github.com/binary-Bug/binary-devops.git
+            git remote set-url origin https://x-access-token:${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}@github.com/binary-Bug/binary-devops.git
             git add .github/workflows/*.yaml
             git commit -m "$COMMIT_MSG"
             git push origin master
             echo "✅ Changes committed directly to master."
           else
-            echo "${{ secrets.ALL_ACCESS_PAT_CLASSIC_TOKEN }}" | gh auth login --with-token
+            echo "${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}" | gh auth login --with-token
             gh auth setup-git
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git remote set-url origin https://x-access-token:${{ secrets.ALL_ACCESS_PAT_CLASSIC_TOKEN }}@github.com/binary-Bug/binary-devops.git
+            git remote set-url origin https://x-access-token:${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}@github.com/binary-Bug/binary-devops.git
             git checkout -b "$BRANCH_NAME"
             git add .github/workflows/*.yaml
             git commit -m "$COMMIT_MSG"
             git push origin "$BRANCH_NAME"
 
             # Create PR using GitHub CLI
-            echo "${{ secrets.ALL_ACCESS_PAT_CLASSIC_TOKEN }}" | gh auth login --with-token
+            echo "${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}" | gh auth login --with-token
             gh auth setup-git
             gh pr create \
               --title "$COMMIT_MSG" \
