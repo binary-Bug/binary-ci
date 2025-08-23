@@ -13,6 +13,9 @@ on:
         required: true
         type: boolean
 
+permissions:
+  contents: write
+
 jobs:
   update-options:
     runs-on: ubuntu-latest
@@ -46,15 +49,15 @@ jobs:
 
           echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
           gh auth setup-git
-          git config user.name "binary-Bug"
-          git config user.email "punitbantia@gmail.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/binary-Bug/binary-devops.git
 
           if [[ "${{ github.event.inputs.commit_to_master }}" == "true" ]]; then
             echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
             gh auth setup-git
-            git config user.name "binary-Bug"
-            git config user.email "punitbantia@gmail.com"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/binary-Bug/binary-devops.git
             git add .github/workflows/*.yaml
             git commit -m "$COMMIT_MSG"
@@ -63,8 +66,8 @@ jobs:
           else
             echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
             gh auth setup-git
-            git config user.name "binary-Bug"
-            git config user.email "punitbantia@gmail.com"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/binary-Bug/binary-devops.git
             git checkout -b "$BRANCH_NAME"
             git add .github/workflows/*.yaml
