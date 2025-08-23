@@ -222,6 +222,8 @@ jobs:
             --ref master \
             --field new_components="${{ inputs.name_prefix }}-ui,${{ inputs.name_prefix }}-api,${{ inputs.name_prefix }}-db" \
             --field commit_to_master="true"
+          # Wait for the workflow to complete before triggering builds
+          sleep 30
 
   trigger-build-artifact:
     name: "Trigger Build Artifact Workflow"
