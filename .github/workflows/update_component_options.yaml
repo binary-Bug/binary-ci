@@ -22,6 +22,9 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          ref: master
+          token: ${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}
 
       - name: Add components to workflow files
         run: |
