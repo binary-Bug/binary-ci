@@ -1,0 +1,97 @@
+name: 🔄 Update Workflow Options
+
+on:
+  workflow_dispatch:
+    inputs:
+      new_components:
+        description: "Comma-separated list of components to add"
+        required: true
+        type: string
+      commit_to_master:
+        description: "Commit directly to master?"
+        required: true
+        type: boolean
+
+jobs:
+  update-options:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Add components to workflow files
+        run: |
+          files=".github/workflows/build_artifact.yaml .github/workflows/deploy_artifact.yaml"
+          IFS=',' read -ra components <<< "${{ github.event.inputs.new_components }}"
+          for file in $files; do
+            for comp in "${components[@]}"; do
+              if ! grep -q "^\s*- ${comp// /}" "$file"; then
+                sed -i "/options:/a\ \ \ \ \ \ \ \ - ${comp// /}" "$file"
+              fi
+            done
+          done
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Commit or Create PR
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          BRANCH_NAME="update-component"
+          COMPONENTS="${{ github.event.inputs.new_components }}"
+          COMMIT_MSG="Add components [$COMPONENTS] to workflow options"
+
+          if [[ "${{ github.event.inputs.commit_to_master }}" == "true" ]]; then
+            git add .github/workflows/*.yaml
+            git commit -m "$COMMIT_MSG"
+            git push origin master
+            echo "✅ Changes committed directly to master."
+          else
+            git checkout -b "$BRANCH_NAME"
+            git add .github/workflows/*.yaml
+            git commit -m "$COMMIT_MSG"
+            git push origin "$BRANCH_NAME"
+
+            # Create PR using GitHub CLI
+            gh auth setup-git
+            gh pr create \
+              --title "$COMMIT_MSG" \
+              --body "Created from GitHub Actions.\n\nAdded components:\n- ${COMPONENTS//,/\\n- }\n\nFiles updated:\n- build_artifact.yaml\n- deploy_artifact.yaml" \
+              --base master \
+              --head "$BRANCH_NAME"
+            echo "📬 Pull request created from branch '$BRANCH_NAME'."
+          fi
+
+      - name: 📦 Write Job Summary
+        env:
+          COMPONENTS: ${{ github.event.inputs.new_components }}
+          COMMIT_TO_MASTER: ${{ github.event.inputs.commit_to_master }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          echo "### 📦 Job Summary: 🔄 Update Workflow Options" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "**🧩 Components Added to \`options\`:**" >> $GITHUB_STEP_SUMMARY
+          IFS=',' read -ra comps <<< "$COMPONENTS"
+          for comp in "${comps[@]}"; do
+            echo "- ${comp}" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "**📝 Files Updated:**" >> $GITHUB_STEP_SUMMARY
+          echo "- .github/workflows/build_artifact.yaml" >> $GITHUB_STEP_SUMMARY
+          echo "- .github/workflows/deploy_artifact.yaml" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "$COMMIT_TO_MASTER" == "true" ]]; then
+            echo "**🔗 Change Reference:**" >> $GITHUB_STEP_SUMMARY
+            echo "✅ [Commit to master](https://github.com/$REPO/commit/$SHA)" >> $GITHUB_STEP_SUMMARY
+          else
+            BRANCH_NAME="update-component"
+            echo "**🔗 Change Reference:**" >> $GITHUB_STEP_SUMMARY
+            echo "📬 [Pull Request](https://github.com/$REPO/pulls?q=is%3Apr+is%3Aopen+head%3A$BRANCH_NAME)" >> $GITHUB_STEP_SUMMARY
+          fi
