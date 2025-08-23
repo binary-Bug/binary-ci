@@ -1,25 +1,21 @@
-name: 'Angular Build Action'
-description: 'Reusable action for building Angular components.'
+name: "Angular Build Action"
+description: "Reusable action for building Angular components."
 inputs:
   repo_name:
-    description: 'Full repository name (owner/repo)'
+    description: "Full repository name (owner/repo)"
     required: true
   version:
-    description: 'Version string (e.g., v1.2.3)'
+    description: "Version string (e.g., v1.2.3)"
     required: true
   component:
-    description: 'Component name (e.g., piggy-ui)'
+    description: "Component name (e.g., piggy-ui)"
     required: true
   personal_access_token:
-    description: 'GitHub Personal Access Token'
+    description: "GitHub Personal Access Token"
     required: true
-  should_update_version_json:
-    description: 'Should update version.json?'
-    required: false
-    default: "true"
 outputs:
   VERSION:
-    description: 'The calculated version'
+    description: "The calculated version"
     value: ${{ inputs.version }}
 runs:
   using: "composite"
@@ -31,13 +27,16 @@ runs:
         token: ${{ inputs.personal_access_token }}
         ref: master
     - name: Update version.json
-      if: ${{ inputs.should_update_version_json == 'true' }}
       run: |
-        cd src/configs
-        cat version.json
-        rm version.json
-        echo '{"version": "${{ inputs.version }}"}' > version.json
-        cat version.json
+        if [ -d src/configs ] && [ -f src/configs/version.json ]; then
+          cd src/configs
+          cat version.json
+          rm version.json
+          echo '{"version": "${{ inputs.version }}"}' > version.json
+          cat version.json
+        else
+          echo "src/configs or version.json not found, skipping update."
+        fi
       shell: bash
     - name: Set up Node.js version
       uses: actions/setup-node@v3

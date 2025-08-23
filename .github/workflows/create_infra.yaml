@@ -11,7 +11,7 @@ on:
       rg_name:
         description: "Resource group name"
         required: true
-        default: "eat-career"
+        default: "eat"
         type: string
 
       name_prefix:
@@ -207,6 +207,59 @@ jobs:
           echo "- **Resource Group**: '${{ inputs.rg_name }}'" >> $GITHUB_STEP_SUMMARY
           echo "- **Prefix Used**: '${{ inputs.name_prefix }}'" >> $GITHUB_STEP_SUMMARY
 
+  trigger-build-artifact:
+    name: "Trigger Build Artifact Workflow"
+    needs:
+      - apply
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build:
+          - {
+              component: "${{ inputs.name_prefix }}-ui",
+              component_type: "angular",
+            }
+          - {
+              component: "${{ inputs.name_prefix }}-api",
+              component_type: ".net",
+            }
+          - {
+              component: "${{ inputs.name_prefix }}-db",
+              component_type: "sql-dacpac",
+            }
+    if: ${{ needs.apply.result == 'success' }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Trigger build_artifact workflow
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          gh workflow run build_artifact.yaml \
+            --ref master \
+            --field component="${{ matrix.build.component }}" \
+            --field component_type="${{ matrix.build.component_type }}" \
+            --field release_type="patch" \
+            --field is_pre_release="false" \
+            --field auto-deploy="true"
+      - name: Get triggered build workflow run URL
+        id: get_build_url
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Wait a few seconds to ensure the run is registered
+          sleep 5
+          RUN_ID=$(gh run list --workflow=build_artifact.yaml --branch ${{ github.ref_name }} --limit 1 --json databaseId --jq '.[0].databaseId')
+          BUILD_RUN_URL="https://github.com/${{ github.repository }}/actions/runs/$RUN_ID"
+          echo "Build workflow run URL: $BUILD_RUN_URL"
+          echo "BUILD_RUN_URL=$BUILD_RUN_URL" >> $GITHUB_ENV
+      - name: Trigger Summary
+        run: |
+          echo "### 🚀 Triggered Build Artifact Workflow" >> $GITHUB_STEP_SUMMARY
+          echo "- **Component:** ${{ matrix.build.component }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Type:** ${{ matrix.build.component_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Build Workflow Run]($BUILD_RUN_URL)" >> $GITHUB_STEP_SUMMARY
+
   cleanup:
     runs-on: ubuntu-latest
     needs:
@@ -214,6 +267,7 @@ jobs:
       - plan
       - plan-summary
       - apply
+      - trigger-build-artifact
     if: always() # ✅ runs even if any job fails
     steps:
       - name: Delete artifacts

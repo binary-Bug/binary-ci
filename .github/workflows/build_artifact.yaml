@@ -1,4 +1,4 @@
-name: '🏗️ Build Artifact'
+name: "🏗️ Build Artifact"
 run-name: "Build Artifact for ${{ github.event.inputs.component }}"
 
 on:
@@ -25,11 +25,6 @@ on:
         required: true
         type: choice
         options: [patch, minor, major]
-      should_update_version_json:
-        description: "Should update version.json?"
-        required: false
-        type: boolean
-        default: true
       is_pre_release:
         description: "Is this a pre-release?"
         required: false
@@ -42,7 +37,7 @@ on:
 
 jobs:
   setup-job:
-    name: '🛠️ Setup Build Context'
+    name: "🛠️ Setup Build Context"
     runs-on: ubuntu-latest
     outputs:
       component_type_capitalized: ${{ steps.capitalize_type.outputs.cap_type }}
@@ -69,7 +64,12 @@ jobs:
         id: fetch_vars
         run: |
           for V in MAJOR MINOR PATCH; do
-            VAL=$(gh variable get "$V" --repo "${{ steps.compose_repo.outputs.repo_name }}")
+            VAL=$(gh variable get "$V" --repo "${{ steps.compose_repo.outputs.repo_name }}" 2>/dev/null)
+            if [ -z "$VAL" ]; then
+              VAL=0
+              gh variable set "$V" --body "$VAL" --repo "${{ steps.compose_repo.outputs.repo_name }}"
+              echo "Created $V=$VAL in repo"
+            fi
             echo "$V=$VAL" >> $GITHUB_ENV
           done
         env:
@@ -99,7 +99,7 @@ jobs:
         shell: bash
 
   angular-build:
-    name: 'Angular Build'
+    name: "Angular Build"
     if: ${{ github.event.inputs.component_type == 'angular' }}
     needs: setup-job
     runs-on: ubuntu-latest
@@ -115,12 +115,11 @@ jobs:
         with:
           component: ${{ github.event.inputs.component }}
           personal_access_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          should_update_version_json: ${{ github.event.inputs.should_update_version_json }}
           repo_name: ${{ needs.setup-job.outputs.repo_name }}
           version: ${{ needs.setup-job.outputs.version }}
 
   dotnet-build:
-    name: '.NET Build'
+    name: ".NET Build"
     if: ${{ github.event.inputs.component_type == '.net' }}
     needs: setup-job
     runs-on: ubuntu-latest
@@ -140,7 +139,7 @@ jobs:
           version: ${{ needs.setup-job.outputs.version }}
 
   sql-dacpac-build:
-    name: 'SQL Dacpac Build'
+    name: "SQL Dacpac Build"
     if: ${{ github.event.inputs.component_type == 'sql-dacpac' }}
     needs: setup-job
     runs-on: windows-latest
@@ -160,7 +159,7 @@ jobs:
           version: ${{ needs.setup-job.outputs.version }}
 
   finalize-release:
-    name: '🚀 Finalize Release'
+    name: "🚀 Finalize Release"
     needs:
       - setup-job
       - angular-build
@@ -203,9 +202,16 @@ jobs:
         shell: bash
       - name: Generate Changelog
         run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^)
-          echo "Previous tag: $LAST_TAG"
-          CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:'- %s')
+          TAGS=$(git tag --sort=-creatordate)
+          if [ -z "$TAGS" ]; then
+            # No previous tags, get all commits
+            CHANGELOG=$(git log --pretty=format:'- %s')
+            echo "No previous tags found. Showing all commits."
+          else
+            LAST_TAG=$(echo "$TAGS" | head -n 1)
+            CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:'- %s')
+            echo "Previous tag: $LAST_TAG"
+          fi
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF"      >> $GITHUB_ENV
@@ -242,7 +248,7 @@ jobs:
 
   # Trigger deployment workflow after build
   trigger-deploy-artifact:
-    name: 'Trigger Deploy Artifact Workflow'
+    name: "Trigger Deploy Artifact Workflow"
     if: ${{ always() && github.event.inputs.auto-deploy == 'true' }}
     needs:
       - finalize-release
@@ -274,7 +280,7 @@ jobs:
           echo "::set-output name=deploy_run_url::$DEPLOY_RUN_URL"
 
   create-build-summary:
-    name: '📝 ${{ needs.setup-job.outputs.component_type_capitalized }} Output'
+    name: "📝 ${{ needs.setup-job.outputs.component_type_capitalized }} Output"
     needs:
       - setup-job
       - angular-build
