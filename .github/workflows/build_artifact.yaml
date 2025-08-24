@@ -202,6 +202,15 @@ jobs:
             echo "Updated $V=${!V}"
           done
         shell: bash
+      - name: Get Previous tag
+        run: |
+          TAGS=$(git tag --sort=-creatordate)
+          if [ -z "$TAGS" ]; then
+            echo "No previous tags found."
+          else
+            LAST_TAG=$(echo "$TAGS" | head -n 1) >> $GITHUB_ENV
+            echo "Previous tag: $LAST_TAG"
+          fi
       - name: Create Git Tag
         run: |
           git config user.name "github-actions[bot]"
@@ -212,16 +221,15 @@ jobs:
         shell: bash
       - name: Generate Changelog
         run: |
-          TAGS=$(git tag --sort=-creatordate)
-          if [ -z "$TAGS" ]; then
+          if [ -z "$LAST_TAG" ]; then
             # No previous tags, get all commits
             CHANGELOG=$(git log --pretty=format:'- %s')
             echo "No previous tags found. Showing all commits."
           else
-            LAST_TAG=$(echo "$TAGS" | head -n 1)
             CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:'- %s')
             echo "Previous tag: $LAST_TAG"
           fi
+          echo "CHANGELOG is $CHANGELOG"
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF"      >> $GITHUB_ENV
