@@ -221,15 +221,19 @@ jobs:
         shell: bash
       - name: Generate Changelog
         run: |
-          if [ -z "$LAST_TAG" ]; then
+          if [ -z "${{ env.LAST_TAG }}" ]; then
             # No previous tags, get all commits
             CHANGELOG=$(git log --pretty=format:'- %s')
             echo "No previous tags found. Showing all commits."
           else
-            CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:'- %s')
-            echo "Previous tag: $LAST_TAG"
+            CHANGELOG=$(git log ${{ env.LAST_TAG }}..HEAD --pretty=format:'- %s')
+            echo "Previous tag: ${{ env.LAST_TAG }}"
           fi
           echo "CHANGELOG is $CHANGELOG"
+          if [ -z $CHANGELOG ]; then
+            echo "No changes found."
+            CHANGELOG="No changes."
+          fi
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF"      >> $GITHUB_ENV
