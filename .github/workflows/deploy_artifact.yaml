@@ -163,13 +163,13 @@ jobs:
         with:
           creds: ${{ secrets.AZ_CREDS }}
 
-      - name: "Build DACPAC filename"
-        id: build-dacpac-name
-        run: |
-          component="${{ github.event.inputs.component }}"
-          # Replace '-db' with '_UI' and convert to uppercase
-          transformed=$(echo "$component" | sed 's/-db$/_UI/' | tr '[:lower:]' '[:upper:]')
-          echo "dacpac=${transformed}.dacpac" >> $GITHUB_OUTPUT
+      # - name: "Build DACPAC filename"
+      #   id: build-dacpac-name
+      #   run: |
+      #     component="${{ github.event.inputs.component }}"
+      #     # Replace '-db' with '_UI' and convert to uppercase
+      #     transformed=$(echo "$component" | sed 's/-db$/_UI/' | tr '[:lower:]' '[:upper:]')
+      #     echo "dacpac=${transformed}.dacpac" >> $GITHUB_OUTPUT
 
       - name: "Get SQL connection string"
         id: get-connection-string
@@ -212,7 +212,7 @@ jobs:
         uses: Azure/sql-action@v2.3
         with:
           connection-string: ${{ steps.get-connection-string.outputs.sql-connection }}
-          path: "./artifact/${{ steps.build-dacpac-name.outputs.dacpac }}"
+          path: "./artifact/${{ github.event.inputs.component }}"
           action: "publish"
 
   post-deployment:
