@@ -212,7 +212,7 @@ jobs:
         uses: Azure/sql-action@v2.3
         with:
           connection-string: ${{ steps.get-connection-string.outputs.sql-connection }}
-          path: "./artifact/${{ github.event.inputs.component }}"
+          path: "./artifact/${{ github.event.inputs.component }}.dacpac"
           action: "publish"
 
   post-deployment:
