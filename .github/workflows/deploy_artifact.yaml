@@ -163,14 +163,6 @@ jobs:
         with:
           creds: ${{ secrets.AZ_CREDS }}
 
-      # - name: "Build DACPAC filename"
-      #   id: build-dacpac-name
-      #   run: |
-      #     component="${{ github.event.inputs.component }}"
-      #     # Replace '-db' with '_UI' and convert to uppercase
-      #     transformed=$(echo "$component" | sed 's/-db$/_UI/' | tr '[:lower:]' '[:upper:]')
-      #     echo "dacpac=${transformed}.dacpac" >> $GITHUB_OUTPUT
-
       - name: "Get SQL connection string"
         id: get-connection-string
         env:
@@ -181,9 +173,6 @@ jobs:
           # Extract server name: everything before the first '-'
           sql_server="${component%%-*}"
 
-          # Build database name: replace '-db' with '_UI' and uppercase
-          # database_name=$(echo "$component" | sed 's/-db$/_UI/' | tr '[:lower:]' '[:upper:]')
-
           database_name=$component
 
           # Get connection string using az CLI
@@ -193,14 +182,10 @@ jobs:
             --server "$sql_server" \
             --output tsv)
 
-          echo "adv grepping userid and pass in conn"
-          echo "$conn" | grep -oE 'User ID=[^;]+;Password=[^;]+;'
-          echo "adv grep complete"
-
           echo "SQL Conn string from az is $conn"
 
           conn_updated=$(echo "$conn" | sed -E \
-          -e "s#User ID=[^;]+;\*\*\*#User ID=sqladminuser;Password=$GH_SECRET_AZURE_DB_PASSWORD#" \
+          -e "s#User ID=[^;]+;Password=[^;]+;#User ID=sqladminuser;Password=$GH_SECRET_AZURE_DB_PASSWORD#" \
           -e "s/Connection Timeout=30/Connection Timeout=90/")
 
           echo "Updated conn string is $conn_updated"
