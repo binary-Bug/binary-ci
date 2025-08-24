@@ -192,17 +192,19 @@ jobs:
             --name "$database_name" \
             --server "$sql_server" \
             --output tsv)
-          echo "grepping userid and pass in conn"
-          echo "$conn" | grep -oE 'User ID=[^;]+;\*\*\*'
-          echo "grep complete"
+
           echo "adv grepping userid and pass in conn"
           echo "$conn" | grep -oE 'User ID=[^;]+;Password=[^;]+;'
           echo "adv grep complete"
+
           echo "SQL Conn string from az is $conn"
+
           conn_updated=$(echo "$conn" | sed -E \
           -e "s#User ID=[^;]+;\*\*\*#User ID=sqladminuser;Password=$GH_SECRET_AZURE_DB_PASSWORD#" \
           -e "s/Connection Timeout=30/Connection Timeout=90/")
+
           echo "Updated conn string is $conn_updated"
+
           echo "sql-connection=$conn_updated" >> $GITHUB_OUTPUT
 
       - name: Install sqlpackage and add to PATH
