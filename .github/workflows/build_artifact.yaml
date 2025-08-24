@@ -208,8 +208,9 @@ jobs:
           if [ -z "$TAGS" ]; then
             echo "No previous tags found."
           else
-            LAST_TAG=$(echo "$TAGS" | head -n 1) >> $GITHUB_ENV
+            LAST_TAG=$(echo "$TAGS" | head -n 1)
             echo "Previous tag: $LAST_TAG"
+            echo "LAST_TAG=$LAST_TAG" >> $GITHUB_ENV
           fi
       - name: Create Git Tag
         run: |
