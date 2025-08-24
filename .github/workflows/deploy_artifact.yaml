@@ -185,10 +185,12 @@ jobs:
           echo "SQL Conn string from az is $conn"
 
           conn_updated=$(echo "$conn" | sed -E \
-          -e "s#User ID=[^;]+;Password=[^;]+;#User ID=sqladminuser;Password=$GH_SECRET_AZURE_DB_PASSWORD#" \
+          -e "s#User ID=[^;]+;Password=[^;]+;#User ID=sqladminuser;Password=${GH_SECRET_AZURE_DB_PASSWORD};#" \
           -e "s/Connection Timeout=30/Connection Timeout=90/")
 
           echo "Updated conn string is $conn_updated"
+
+          echo "Updated conn string contains password of length: ${#GH_SECRET_AZURE_DB_PASSWORD}"
 
           echo "sql-connection=$conn_updated" >> $GITHUB_OUTPUT
 
