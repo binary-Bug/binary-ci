@@ -1,0 +1,89 @@
+name: ⚙️ Generate TF State
+run-name: Import Azure RG to Terraform State
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource_group:
+        description: "Azure Resource Group Name"
+        required: true
+        type: string
+
+jobs:
+  import_state:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    env:
+      TF_VAR_resource_group_name: ${{ inputs.resource_group }}
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZ_CREDS }}
+
+      - name: Init Terraform
+        run: terraform init
+
+      - name: List and Import All Resources from RG
+        env:
+          RG_NAME: ${{ github.event.inputs.resource_group }}
+        run: |
+          echo "Checking if resource group '$RG_NAME' exists..."
+
+          # Check RG existence — will return non-zero if not found
+          if ! az group show --name "$RG_NAME" &>/dev/null; then
+            echo "❌ Resource group '$RG_NAME' not found in the current subscription."
+            exit 1
+          fi
+
+          echo "✅ Resource group '$RG_NAME' exists."
+
+          echo "Listing all resources in RG: $RG_NAME"
+
+          # Get list of IDs
+          az resource list \
+            --resource-group "$RG_NAME" \
+            --query "[].id" -o tsv |
+          while read -r id; do
+            # Derive Terraform-friendly name (replace invalid chars with underscores)
+            tf_name=$(basename "$id" | sed 's/[^a-zA-Z0-9_]/_/g')
+            
+            # Derive Terraform type from Azure type
+            # Example: Microsoft.Storage/storageAccounts => azurerm_storage_account
+            az_type=$(az resource show --ids "$id" --query "type" -o tsv)
+            tf_type=$(echo "$az_type" \
+              | tr '[:upper:]' '[:lower:]' \
+              | sed -E 's|microsoft\.compute/disks|azurerm_managed_disk|; \
+                        s|microsoft\.compute/virtualmachines|azurerm_virtual_machine|; \
+                        s|microsoft\.storage/storageaccounts|azurerm_storage_account|; \
+                        s|microsoft\.network/virtualnetworks|azurerm_virtual_network|; \
+                        s|microsoft\.network/networkinterfaces|azurerm_network_interface|; \
+                        s|microsoft\.network/publicipaddresses|azurerm_public_ip|')
+
+            if [ -n "$tf_type" ]; then
+              echo "Importing $tf_type.$tf_name from $id"
+              terraform import "$tf_type.$tf_name" "$id" || echo "⚠️ Import failed for $id"
+            else
+              echo "⚠️ No Terraform type mapping for Azure type: $az_type"
+            fi
+          done
+
+      - name: Upload Terraform State
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfstate-${{ inputs.resource_group }}
+          path: infra/terraform.tfstate*
