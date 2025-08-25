@@ -61,11 +61,14 @@ jobs:
             --query "[].id" -o tsv |
           while read -r id; do
             # Derive Terraform-friendly name (replace invalid chars with underscores)
+            echo "Deriving Terraform name for resource ID: $id"
             tf_name=$(basename "$id" | sed 's/[^a-zA-Z0-9_]/_/g')
-            
+
             # Derive Terraform type from Azure type
             # Example: Microsoft.Storage/storageAccounts => azurerm_storage_account
+            echo "Deriving Terraform type from Azure Type for resource ID: $id"
             az_type=$(az resource show --ids "$id" --query "type" -o tsv)
+            echo "Azure Type: $az_type"
             tf_type=$(echo "$az_type" \
               | tr '[:upper:]' '[:lower:]' \
               | sed -E 's|microsoft\.compute/disks|azurerm_managed_disk|; \
@@ -74,6 +77,8 @@ jobs:
                         s|microsoft\.network/virtualnetworks|azurerm_virtual_network|; \
                         s|microsoft\.network/networkinterfaces|azurerm_network_interface|; \
                         s|microsoft\.network/publicipaddresses|azurerm_public_ip|')
+
+            echo "Terraform Type: $tf_type"
 
             if [ -n "$tf_type" ]; then
               echo "Importing $tf_type.$tf_name from $id"
