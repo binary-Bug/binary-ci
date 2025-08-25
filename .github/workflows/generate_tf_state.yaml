@@ -64,20 +64,53 @@ jobs:
             echo "Deriving Terraform name for resource ID: $id"
             tf_name=$(basename "$id" | sed 's/[^a-zA-Z0-9_]/_/g')
             echo "Terraform Name: $tf_name"
+
             # Derive Terraform type from Azure type
             # Example: Microsoft.Storage/storageAccounts => azurerm_storage_account
             echo "Deriving Terraform type from Azure Type for resource ID: $id"
-            az_type=$(az resource show --ids "$id" --query "type" -o tsv)
-            echo "Azure Type: $az_type"
-            tf_type=$(echo "$az_type" \
-              | tr '[:upper:]' '[:lower:]' \
-              | sed -E 's|microsoft\.compute/disks|azurerm_managed_disk|; \
-                        s|microsoft\.compute/virtualmachines|azurerm_virtual_machine|; \
-                        s|microsoft\.storage/storageaccounts|azurerm_storage_account|; \
-                        s|microsoft\.network/virtualnetworks|azurerm_virtual_network|; \
-                        s|microsoft\.network/networkinterfaces|azurerm_network_interface|; \
-                        s|microsoft\.network/publicipaddresses|azurerm_public_ip|')
 
+            az_type=$(az resource show --ids "$id" --query "type" -o tsv | tr '[:upper:]' '[:lower:]')
+            echo "Azure Type: $az_type"
+
+            case "$az_type" in
+              microsoft.compute/disks)
+                tf_type="azurerm_managed_disk"
+                ;;
+              microsoft.compute/virtualmachines)
+                tf_type="azurerm_virtual_machine"
+                ;;
+              microsoft.storage/storageaccounts)
+                tf_type="azurerm_storage_account"
+                ;;
+              microsoft.network/virtualnetworks)
+                tf_type="azurerm_virtual_network"
+                ;;
+              microsoft.network/networkinterfaces)
+                tf_type="azurerm_network_interface"
+                ;;
+              microsoft.network/publicipaddresses)
+                tf_type="azurerm_public_ip"
+                ;;
+              microsoft.sql/servers)
+                tf_type="azurerm_mssql_server"
+                ;;
+              microsoft.sql/servers/databases)
+                tf_type="azurerm_mssql_database"
+                ;;
+              microsoft.web/sites)
+                tf_type="azurerm_app_service"
+                ;;
+              microsoft.web/serverfarms)
+                tf_type="azurerm_app_service_plan"
+                ;;
+              microsoft.managedidentity/userassignedidentities)
+                tf_type="azurerm_user_assigned_identity"
+                ;;
+              # add more mappings here as needed
+              *)
+                tf_type=""
+                ;;
+            esac
             echo "Terraform Type: $tf_type"
 
             if [ -n "$tf_type" ]; then
