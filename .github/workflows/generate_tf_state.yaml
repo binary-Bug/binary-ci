@@ -115,7 +115,7 @@ jobs:
 
             if [ -n "$tf_type" ]; then
               echo "Importing $tf_type.$tf_name from $id"
-              terraform import "$tf_type.$tf_name" "$id" || echo "⚠️ Import failed for $id"
+              terraform import "$tf_type.main" "$id" || echo "⚠️ Import failed for $id"
             else
               echo "⚠️ No Terraform type mapping for Azure type: $az_type"
             fi
