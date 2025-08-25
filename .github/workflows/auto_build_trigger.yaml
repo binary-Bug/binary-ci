@@ -40,21 +40,21 @@ jobs:
           jq -r --arg component "${{ matrix.build.component }}" '.workflow_runs[] | select(.name | test("Build Artifact.*" + $component)) | .name')
 
           if [[ -n "$RUNNING_JOBS" ]]; then
-            echo "BUILD_IN_PROGRESS=true" >> "$GITHUB_ENV"
+            echo "build_in_progress=true" >> "$GITHUB_OUTPUT"
           else
-            echo "BUILD_IN_PROGRESS=false" >> "$GITHUB_ENV"
+            echo "build_in_progress=false" >> "$GITHUB_OUTPUT"
           fi
 
         # Skip all the next steps if a build is in progress
       - name: Compose Repository Name
-        if: env.BUILD_IN_PROGRESS == 'false'
+        if: steps.check_build.outputs.build_in_progress == 'false'
         id: compose_repo
         run: |
           REPO_NAME="${{ vars.REPO_OWNER }}${{ matrix.build.component }}"
           echo "repo_name=$REPO_NAME" >> $GITHUB_OUTPUT
 
       - name: Checkout code
-        if: env.BUILD_IN_PROGRESS == 'false'
+        if: steps.check_build.outputs.build_in_progress == 'false'
         uses: actions/checkout@v2
         with:
           repository: ${{ steps.compose_repo.outputs.repo_name }}
@@ -62,20 +62,21 @@ jobs:
           token: ${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}
 
       - name: Scan for changes
-        if: env.BUILD_IN_PROGRESS == 'false'
+        id: scan
+        if: steps.check_build.outputs.build_in_progress == 'false'
         run: |
           if git tag --points-at HEAD | grep -q .; then
-            echo "IS_TAGGED=true" >> "$GITHUB_ENV"
+            echo "is_tagged=true" >> "$GITHUB_OUTPUT"
           else
-            echo "IS_TAGGED=false" >> "$GITHUB_ENV"
+            echo "is_tagged=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout Repository
-        if: env.BUILD_IN_PROGRESS == 'false' && env.IS_TAGGED == 'false'
+        if: steps.check_build.outputs.build_in_progress == 'false' && steps.scan.outputs.is_tagged == 'false'
         uses: actions/checkout@v4
 
       - name: Trigger Build Workflow
-        if: env.BUILD_IN_PROGRESS == 'false' && env.IS_TAGGED == 'false'
+        if: steps.check_build.outputs.build_in_progress == 'false' && steps.scan.outputs.is_tagged == 'false'
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
@@ -93,10 +94,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Component: ${{ matrix.build.component }}" >> $GITHUB_STEP_SUMMARY
           echo "- Repository: ${{ steps.compose_repo.outputs.repo_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Build In Progress: ${{ env.BUILD_IN_PROGRESS }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Is Tagged: ${{ env.IS_TAGGED }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build In Progress: ${{ steps.check_build.outputs.build_in_progress }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Is Tagged: ${{ steps.scan.outputs.is_tagged }}" >> $GITHUB_STEP_SUMMARY
 
-          if [[ "${{ env.BUILD_IN_PROGRESS }}" == "false" && "${{ env.IS_TAGGED }}" == "false" ]]; then
+          if [[ "${{ steps.check_build.outputs.build_in_progress }}" == "false" && "${{ steps.scan.outputs.is_tagged }}" == "false" ]]; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "✅ Build was triggered successfully." >> $GITHUB_STEP_SUMMARY
           else
