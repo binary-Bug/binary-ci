@@ -1,4 +1,4 @@
-name: ⚡ Auto Build Trigger
+name: ⚡ Auto Trigger Builds
 run-name: Scan for changes to trigger build
 
 on:
