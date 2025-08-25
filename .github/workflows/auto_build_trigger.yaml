@@ -4,8 +4,8 @@ run-name: Scan for changes to trigger build
 on:
   workflow_dispatch:
 
-  schedule:
-    - cron: "*/5 * * * *" # Run after every 5 minutes
+  # schedule:
+  #   - cron: "*/5 * * * *" # Run after every 5 minutes
 
 jobs:
   scan:
