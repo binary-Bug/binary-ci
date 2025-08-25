@@ -60,14 +60,18 @@ jobs:
           repository: ${{ steps.compose_repo.outputs.repo_name }}
           ref: master
           token: ${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}
+          fetch-depth: 0 # Ensures full history including tags
 
       - name: Scan for changes
         id: scan
         if: steps.check_build.outputs.build_in_progress == 'false'
         run: |
+          git fetch --tags
           if git tag --points-at HEAD | grep -q .; then
+            echo "Tags Found"
             echo "is_tagged=true" >> "$GITHUB_OUTPUT"
           else
+            echo "No Tags Found"
             echo "is_tagged=false" >> "$GITHUB_OUTPUT"
           fi
 
