@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: "*/1 * * * *" # Run after every 1 minute
+    - cron: "*/5 * * * *" # Run after every 5 minutes
 
 jobs:
   scan:
@@ -36,8 +36,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          RUNNING_JOBS=$(gh api -X GET /repos/binary-Bug/binary-devops/actions/runs?status=in_progress | jq -r '.workflow_runs[] | select(.name == "build_artifact.yaml") | .id')
-          if [[ "$RUNNING_JOBS" == *"${{ matrix.build.component }}"* ]]; then
+          RUNNING_JOBS=$(gh api -X GET /repos/binary-Bug/binary-devops/actions/runs?status=in_progress |
+          jq -r --arg component "${{ matrix.build.component }}" '.workflow_runs[] | select(.name | test("Build Artifact.*" + $component)) | .name')
+
+          if [[ -n "$RUNNING_JOBS" ]]; then
             echo "BUILD_IN_PROGRESS=true" >> "$GITHUB_ENV"
           else
             echo "BUILD_IN_PROGRESS=false" >> "$GITHUB_ENV"
