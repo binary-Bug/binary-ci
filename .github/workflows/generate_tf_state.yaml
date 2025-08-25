@@ -111,15 +111,15 @@ jobs:
                 tf_block="allow_all"
                 ;;
               microsoft.sql/servers/databases)
-                tf_type="azurerm_mssql_database"
+                tf_type="azapi_resource"
                 tf_block="sql_database"
                 ;;
               microsoft.web/sites)
-                tf_type="azurerm_app_service"
+                tf_type="azurerm_windows_web_app"
                 tf_block="apps"
                 ;;
               microsoft.web/serverfarms)
-                tf_type="azurerm_app_service_plan"
+                tf_type="azurerm_service_plan"
                 tf_block="main"
                 ;;
               microsoft.managedidentity/userassignedidentities)
