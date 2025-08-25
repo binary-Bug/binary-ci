@@ -1,11 +1,11 @@
-name: Auto Build Trigger
+name: ⚡ Auto Build Trigger
 run-name: Scan for changes to trigger build
 
 on:
   workflow_dispatch:
 
   schedule:
-    - cron: "*/10 * * * *" # Run after every 10 seconds
+    - cron: "*/1 * * * *" # Run after every 1 minute
 
 jobs:
   scan:
