@@ -11,6 +11,7 @@ on:
 
 jobs:
   import_state:
+    name: Import Azure Resource Group to Terraform State
     runs-on: ubuntu-latest
     defaults:
       run:
