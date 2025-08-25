@@ -115,8 +115,13 @@ jobs:
                 tf_block="sql_database"
                 ;;
               microsoft.web/sites)
+                if [[ "$tf_name" == *"ui"* ]]; then
+                    idx_key="ui"
+                else
+                    idx_key="api"
+                fi
                 tf_type="azurerm_windows_web_app"
-                tf_block="apps[\"${tf_name}\"]"
+                tf_block="apps[\"${idx_key}\"]"
                 ;;
               microsoft.web/serverfarms)
                 tf_type="azurerm_service_plan"
