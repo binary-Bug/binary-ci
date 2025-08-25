@@ -21,15 +21,15 @@ jobs:
     strategy:
       matrix:
         build:
-          - { component: "piggy-ui" }
-          - { component: "piggy-api" }
-          - { component: "piggy-db" }
-          - { component: "eat-ui" }
-          - { component: "eat-api" }
-          - { component: "eat-db" }
+          - { component: "piggy-ui", component_type: "angular" }
+          - { component: "piggy-api", component_type: ".net" }
+          - { component: "piggy-db", component_type: "sql-dacpac" }
+          - { component: "eat-ui", component_type: "angular" }
+          - { component: "eat-api", component_type: ".net" }
+          - { component: "eat-db", component_type: "sql-dacpac" }
     steps:
       # this step checks if there is already a build running for the same component, if so it will skip this run
-      # to check if a build is in progress, we get the list of running jobs from the GitHub API for --workflow=build_artifact.yaml in the binary-Bug/binary-devops repo
+      # to check if a build is in progress, we get the list of running jobs from the GitHub API for the binary-Bug/binary-devops repo and filter Build Artifact jobs
       # we then check if there are any jobs with the matrix.build.component name by parsing the run-name of the running workflow and looking for a substring with the matrix.build.component name in it
       - name: Check if a build is already running
         id: check_build
@@ -70,6 +70,23 @@ jobs:
             echo "IS_TAGGED=false" >> "$GITHUB_ENV"
           fi
 
+      - name: Checkout Repository
+        if: env.BUILD_IN_PROGRESS == 'false' && env.IS_TAGGED == 'false'
+        uses: actions/checkout@v4
+
+      - name: Trigger Build Workflow
+        if: env.BUILD_IN_PROGRESS == 'false' && env.IS_TAGGED == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          gh workflow run build_artifact.yaml \
+            --ref master \
+            --field component="${{ matrix.build.component }}" \
+            --field component_type="${{ matrix.build.component_type }}" \
+            --field release_type="patch" \
+            --field is_pre_release="false" \
+            --field auto-deploy="true"
+
       - name: Generate Job Summary
         run: |
           echo "## Build Trigger Summary" >> $GITHUB_STEP_SUMMARY
@@ -78,3 +95,11 @@ jobs:
           echo "- Repository: ${{ steps.compose_repo.outputs.repo_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- Build In Progress: ${{ env.BUILD_IN_PROGRESS }}" >> $GITHUB_STEP_SUMMARY
           echo "- Is Tagged: ${{ env.IS_TAGGED }}" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ env.BUILD_IN_PROGRESS }}" == "false" && "${{ env.IS_TAGGED }}" == "false" ]]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Build was triggered successfully." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ No build was triggered." >> $GITHUB_STEP_SUMMARY
+          fi
