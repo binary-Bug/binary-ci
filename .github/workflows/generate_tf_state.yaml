@@ -67,7 +67,7 @@ jobs:
           while read -r id; do
             # Derive Terraform-friendly name (replace invalid chars with underscores)
             echo "Deriving Terraform name for resource ID: $id"
-            tf_name=$(basename "$id" | sed 's/[^a-zA-Z0-9_]/_/g')
+            tf_name=$(basename "$id" | sed 's/[^a-zA-Z0-9_-]/_/g')
             echo "Terraform Name: $tf_name"
 
             # Derive Terraform type from Azure type
@@ -116,16 +116,16 @@ jobs:
                 ;;
               microsoft.web/sites)
                 tf_type="azurerm_windows_web_app"
-                tf_block="apps"
+                tf_block="apps[$tf_name]"
                 ;;
               microsoft.web/serverfarms)
                 tf_type="azurerm_service_plan"
                 tf_block="main"
                 ;;
-              microsoft.managedidentity/userassignedidentities)
-                tf_type="azurerm_user_assigned_identity"
-                tf_block="main"
-                ;;
+              # microsoft.managedidentity/userassignedidentities)
+              #   tf_type="azurerm_user_assigned_identity"
+              #   tf_block="main"
+              #   ;;
               # add more mappings here as needed
               *)
                 tf_type=""
