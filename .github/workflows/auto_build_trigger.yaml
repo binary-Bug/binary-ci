@@ -1,0 +1,78 @@
+name: Auto Build Trigger
+run-name: Scan for changes to trigger build
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "*/10 * * * *" # Run after every 10 seconds
+
+jobs:
+  scan:
+    # this job scans for changes in the following repositories by checking if there are any commits that have not been tagged
+    #      - piggy-ui
+    #      - piggy-api
+    #      - piggy-db
+    #      - eat-ui
+    #      - eat-api
+    #      - eat-db
+    name: Scan for changes
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build:
+          - { component: "piggy-ui" }
+          - { component: "piggy-api" }
+          - { component: "piggy-db" }
+          - { component: "eat-ui" }
+          - { component: "eat-api" }
+          - { component: "eat-db" }
+    steps:
+      # this step checks if there is already a build running for the same component, if so it will skip this run
+      # to check if a build is in progress, we get the list of running jobs from the GitHub API for --workflow=build_artifact.yaml in the binary-Bug/binary-devops repo
+      # we then check if there are any jobs with the matrix.build.component name by parsing the run-name of the running workflow and looking for a substring with the matrix.build.component name in it
+      - name: Check if a build is already running
+        id: check_build
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          RUNNING_JOBS=$(gh api -X GET /repos/binary-Bug/binary-devops/actions/runs?status=in_progress | jq -r '.workflow_runs[] | select(.name == "build_artifact.yaml") | .id')
+          if [[ "$RUNNING_JOBS" == *"${{ matrix.build.component }}"* ]]; then
+            echo "BUILD_IN_PROGRESS=true" >> "$GITHUB_ENV"
+          else
+            echo "BUILD_IN_PROGRESS=false" >> "$GITHUB_ENV"
+          fi
+
+        # Skip all the next steps if a build is in progress
+      - name: Compose Repository Name
+        if: env.BUILD_IN_PROGRESS == 'false'
+        id: compose_repo
+        run: |
+          REPO_NAME="${{ vars.REPO_OWNER }}${{ matrix.build.component }}"
+          echo "repo_name=$REPO_NAME" >> $GITHUB_OUTPUT
+
+      - name: Checkout code
+        if: env.BUILD_IN_PROGRESS == 'false'
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ steps.compose_repo.outputs.repo_name }}
+          ref: master
+          token: ${{ secrets.ALL_ACCESS_PAT_FG_TOKEN }}
+
+      - name: Scan for changes
+        if: env.BUILD_IN_PROGRESS == 'false'
+        run: |
+          if git tag --points-at HEAD | grep -q .; then
+            echo "IS_TAGGED=true" >> "$GITHUB_ENV"
+          else
+            echo "IS_TAGGED=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Generate Job Summary
+        run: |
+          echo "## Build Trigger Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Component: ${{ matrix.build.component }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Repository: ${{ steps.compose_repo.outputs.repo_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build In Progress: ${{ env.BUILD_IN_PROGRESS }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Is Tagged: ${{ env.IS_TAGGED }}" >> $GITHUB_STEP_SUMMARY
