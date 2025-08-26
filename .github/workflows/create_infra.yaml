@@ -76,6 +76,123 @@ jobs:
           terraform import azurerm_resource_group.main "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.rg_name }}"
           echo "Terraform import succeeded."
 
+      - name: List and Import All Resources from RG
+        if: env.rg_exists == 'true'
+        env:
+          RG_NAME: ${{ github.event.inputs.rg_name }}
+        run: |
+          echo "Checking if resource group '$RG_NAME' exists..."
+
+          # Check RG existence — will return non-zero if not found
+          if ! az group show --name "$RG_NAME" &>/dev/null; then
+            echo "❌ Resource group '$RG_NAME' not found in the current subscription."
+            exit 1
+          fi
+
+          echo "✅ Resource group '$RG_NAME' exists."
+
+          echo "Listing all resources in RG: $RG_NAME"
+
+          # Get list of IDs
+          az resource list \
+            --resource-group "$RG_NAME" \
+            --query "[].id" -o tsv |
+          while read -r id; do
+            # Derive Terraform-friendly name (replace invalid chars with underscores)
+            echo "Deriving Terraform name for resource ID: $id"
+            tf_name=$(basename "$id" | sed 's/[^a-zA-Z0-9_-]/_/g')
+            echo "Terraform Name: $tf_name"
+
+            # Derive Terraform type from Azure type
+            # Example: Microsoft.Storage/storageAccounts => azurerm_storage_account
+            echo "Deriving Terraform type from Azure Type for resource ID: $id"
+
+            az_type=$(az resource show --ids "$id" --query "type" -o tsv | tr '[:upper:]' '[:lower:]')
+            echo "Azure Type: $az_type"
+
+            case "$az_type" in
+              microsoft.compute/disks)
+                tf_type="azurerm_managed_disk"
+                tf_block="main"
+                ;;
+              microsoft.compute/virtualmachines)
+                tf_type="azurerm_virtual_machine"
+                tf_block="main"
+                ;;
+              microsoft.storage/storageaccounts)
+                tf_type="azurerm_storage_account"
+                tf_block="main"
+                ;;
+              microsoft.network/virtualnetworks)
+                tf_type="azurerm_virtual_network"
+                tf_block="main"
+                ;;
+              microsoft.network/networkinterfaces)
+                tf_type="azurerm_network_interface"
+                tf_block="main"
+                ;;
+              microsoft.network/publicipaddresses)
+                tf_type="azurerm_public_ip"
+                tf_block="main"
+                ;;
+              microsoft.sql/servers)
+                tf_type="azurerm_mssql_server"
+                tf_block="main"
+                # 🔍 Enumerate firewall rules for this server and import them too
+                server_name="$tf_name"
+                echo "Fetching firewall rules for SQL Server: $server_name"
+                az sql server firewall-rule list \
+                    --resource-group "$RG_NAME" \
+                    --server "$server_name" \
+                    --query "[].{name:name, id:id}" -o tsv |
+                while read -r fr_name fr_id; do
+                    echo "Importing firewall rule: $fr_name"
+                    terraform import "azurerm_mssql_firewall_rule.allow_all" "$fr_id" \
+                      || echo "⚠️ Import failed for firewall rule $fr_name"
+                done
+                ;;
+              microsoft.sql/servers/databases)
+                tf_type="azapi_resource"
+                tf_block="sql_database"
+                # Skip system database 'master'
+                if [[ "${tf_name,,}" == "master" ]]; then
+                    echo "⏭️ Skipping system database '$tf_name' — not managed in Terraform."
+                    continue
+                fi
+                ;;
+              microsoft.web/sites)
+                if [[ "$tf_name" == *"ui"* ]]; then
+                    idx_key="ui"
+                else
+                    idx_key="api"
+                fi
+                tf_type="azurerm_windows_web_app"
+                tf_block="apps[\"${idx_key}\"]"
+                ;;
+              microsoft.web/serverfarms)
+                tf_type="azurerm_service_plan"
+                tf_block="main"
+                ;;
+              # microsoft.managedidentity/userassignedidentities)
+              #   tf_type="azurerm_user_assigned_identity"
+              #   tf_block="main"
+              #   ;;
+              # add more mappings here as needed
+              *)
+                tf_type=""
+                tf_block=""
+                ;;
+            esac
+            echo "Terraform Type: $tf_type"
+
+            if [ -n "$tf_type" ]; then
+              echo "Importing $tf_type.$tf_name from $id"
+              terraform import "$tf_type.$tf_block" "$id" || echo "⚠️ Import failed for $id"
+            else
+              echo "⚠️ No Terraform type mapping for Azure type: $az_type"
+            fi
+          done
+
       - name: Create Empty tfstate if Resource Group Not Found
         if: env.rg_exists == 'false'
         run: |
