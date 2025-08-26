@@ -36,23 +36,45 @@ output "sql_firewall_rule_name" {
   value       = azurerm_mssql_firewall_rule.allow_all.name
 }
 
+# locals {
+#   sql_db_output = jsondecode(azapi_resource.sql_database.output)
+# }
+
+# output "sql_database_details" {
+#   value = {
+#     id                         = local.sql_db_output.id
+#     name                       = local.sql_db_output.name
+#     location                   = local.sql_db_output.location
+#     sku_name                   = local.sql_db_output.sku.name
+#     free_limit_enabled         = local.sql_db_output.properties.useFreeLimit
+#     free_limit_behavior        = local.sql_db_output.properties.freeLimitExhaustionBehavior
+#     max_size_gb                = local.sql_db_output.properties.maxSizeBytes / 1073741824
+#     collation                  = local.sql_db_output.properties.collation
+#     auto_pause_delay_minutes   = local.sql_db_output.properties.autoPauseDelay
+#     min_capacity               = local.sql_db_output.properties.minCapacity
+#     backup_storage_redundancy = local.sql_db_output.properties.requestedBackupStorageRedundancy
+#     zone_redundant             = local.sql_db_output.properties.zoneRedundant
+#   }
+# }
+
 locals {
-  sql_db_output = jsondecode(azapi_resource.sql_database.output)
+  # Safely decode the JSON output — default to {} if null or invalid
+  sql_db_output = try(jsondecode(azapi_resource.sql_database.output), {})
 }
 
 output "sql_database_details" {
   value = {
-    id                         = local.sql_db_output.id
-    name                       = local.sql_db_output.name
-    location                   = local.sql_db_output.location
-    sku_name                   = local.sql_db_output.sku.name
-    free_limit_enabled         = local.sql_db_output.properties.useFreeLimit
-    free_limit_behavior        = local.sql_db_output.properties.freeLimitExhaustionBehavior
-    max_size_gb                = local.sql_db_output.properties.maxSizeBytes / 1073741824
-    collation                  = local.sql_db_output.properties.collation
-    auto_pause_delay_minutes   = local.sql_db_output.properties.autoPauseDelay
-    min_capacity               = local.sql_db_output.properties.minCapacity
-    backup_storage_redundancy = local.sql_db_output.properties.requestedBackupStorageRedundancy
-    zone_redundant             = local.sql_db_output.properties.zoneRedundant
+    id                         = try(local.sql_db_output.id, null)
+    name                       = try(local.sql_db_output.name, null)
+    location                   = try(local.sql_db_output.location, null)
+    sku_name                   = try(local.sql_db_output.sku.name, null)
+    free_limit_enabled         = try(local.sql_db_output.properties.useFreeLimit, null)
+    free_limit_behavior        = try(local.sql_db_output.properties.freeLimitExhaustionBehavior, null)
+    max_size_gb                = try(local.sql_db_output.properties.maxSizeBytes, 0) / 1073741824
+    collation                  = try(local.sql_db_output.properties.collation, null)
+    auto_pause_delay_minutes   = try(local.sql_db_output.properties.autoPauseDelay, null)
+    min_capacity               = try(local.sql_db_output.properties.minCapacity, null)
+    backup_storage_redundancy  = try(local.sql_db_output.properties.requestedBackupStorageRedundancy, null)
+    zone_redundant             = try(local.sql_db_output.properties.zoneRedundant, null)
   }
 }
