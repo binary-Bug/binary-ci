@@ -194,7 +194,7 @@ jobs:
           done
 
           echo "Refreshing Terraform state..."
-          terraform apply -refresh-only
+          terraform apply -refresh-only -auto-approve
 
       - name: Create Empty tfstate if Resource Group Not Found
         if: env.rg_exists == 'false'
