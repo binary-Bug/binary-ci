@@ -208,6 +208,15 @@ jobs:
           connection-string: ${{ steps.get-connection-string.outputs.sql-connection }}
           path: "./artifact/${{ github.event.inputs.component }}.dacpac"
           action: "publish"
+          arguments: >-
+            /p:DropObjectsNotInSource=true
+            /p:BlockOnPossibleDataLoss=false
+            /p:DoNotDropObjectType=Users;RoleMembership;Roles;Permissions;
+            /p:DoNotDropObjectType=DatabaseTriggers;Assemblies;Schemas;Filegroups;
+            /p:DoNotDropObjectType=FullTextCatalogs;FullTextStoplists;SearchPropertyLists;
+            /p:DoNotDropObjectType=Sequences;Synonyms;XMLSchemaCollections;PartitionSchemes;
+            /p:DoNotDropObjectType=PartitionFunctions;PlanGuides;ExtendedProperties;MessageTypes;
+            /p:DoNotDropObjectType=RemoteServiceBindings;Routes;Contracts;Queues;Services
 
   post-deployment:
     name: "Post Deployment"
