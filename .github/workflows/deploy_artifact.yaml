@@ -214,6 +214,7 @@ jobs:
           arguments: >-
             /p:DropObjectsNotInSource=true
             /p:BlockOnPossibleDataLoss=false
+            /p:IgnorePermissions=true
             /p:DoNotDropObjectTypes=Users;RoleMembership;DatabaseRoles;DatabaseTriggers;Assemblies;Filegroups;FullTextCatalogs;FullTextStoplists;SearchPropertyLists;Sequences;Synonyms;XMLSchemaCollections;PartitionSchemes;PartitionFunctions;PlanGuides;ExtendedProperties;MessageTypes;RemoteServiceBindings;Routes;Contracts;Queues;Services
 
   post-deployment:
