@@ -102,7 +102,10 @@ jobs:
             echo "Deriving Terraform name for resource ID: $id"
             tf_name=$(basename "$id" | sed 's/[^a-zA-Z0-9_-]/_/g')
             echo "Terraform Name: $tf_name"
-
+            if [[ "$tf_name" == *"_"* ]]; then
+                # Skip this one — contains an underscore
+                continue
+            fi
             # Derive Terraform type from Azure type
             # Example: Microsoft.Storage/storageAccounts => azurerm_storage_account
             echo "Deriving Terraform type from Azure Type for resource ID: $id"
