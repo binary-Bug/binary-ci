@@ -113,6 +113,11 @@ jobs:
               microsoft.sql/servers/databases)
                 tf_type="azapi_resource"
                 tf_block="sql_database"
+                # Skip system database 'master'
+                if [[ "${tf_name,,}" == "master" ]]; then
+                    echo "⏭️ Skipping system database '$tf_name' — not managed in Terraform."
+                    continue
+                fi
                 ;;
               microsoft.web/sites)
                 if [[ "$tf_name" == *"ui"* ]]; then
